@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isRole(roleStr) {
+      return isAuthenticated() && 
+             (getUserData().role == roleStr || getUserData().role == roleStr.upper());
+    }
+
+    function isAdmin() {
+      return isRole('admin') || isRole('ADMIN');
+    }
+
+    function isWorker() {
+      return isRole('worker') || isRole('WORKER');
+    }
+
+    function isCitizen() {
+      return isRole('citizen') || isRole('CITIZEN');
+    }
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // Authenticated users can read profiles
+      allow read: if isAuthenticated();
+
+      // Users can create/update their own document upon registration/login
+      // Role modification restricted to default citizen or Admin overwrite
+      allow create, update: if isAuthenticated() && (
+        (request.auth.uid == userId && (
+          !request.resource.data.keys().hasAny(['role']) ||
+          request.resource.data.role == (resource == null ? 'citizen' : resource.data.role) ||
+          request.resource.data.role == (resource == null ? 'CITIZEN' : resource.data.role) ||
+          isAdmin()
+        )) || isAdmin()
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // Complaints Collection
+    match /complaints/{complaintId} {
+      // Citizens read own complaints, Workers read assigned complaints, Admins read all
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.citizenId == request.auth.uid ||
+        resource.data.assignedWorkerId == request.auth.uid
+      );
+
+      // Citizens create complaints with their own citizenId
+      allow create: if isAuthenticated() && (
+        isAdmin() ||
+        request.resource.data.citizenId == request.auth.uid
+      );
+
+      // Workers update assigned complaints; Admins update all
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        (
+          resource.data.assignedWorkerId == request.auth.uid &&
+          request.resource.data.citizenId == resource.data.citizenId
+        )
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // Worker Tasks Collection
+    match /workerTasks/{taskId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.assignedWorkerId == request.auth.uid
+      );
+      allow write: if isAdmin() || (
+        isAuthenticated() && resource.data.assignedWorkerId == request.auth.uid
+      );
+    }
+  }
+}

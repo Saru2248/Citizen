@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  locales_config.xml — declares the languages the app explicitly supports.
+  Required for AppCompatDelegate.setApplicationLocales() to work correctly on API 33+.
+  Each <locale> tag must match the BCP 47 language tag for the corresponding values-XX folder.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en"/>   <!-- English  (values/)    -->
+    <locale android:name="mr"/>   <!-- Marathi  (values-mr/) -->
+    <locale android:name="hi"/>   <!-- Hindi    (values-hi/) -->
+</locale-config>

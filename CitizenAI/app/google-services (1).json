@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1001811384485",
+    "project_id": "citizen-ai-7d63b",
+    "storage_bucket": "citizen-ai-7d63b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1001811384485:android:64e9c63864b676db87154c",
+        "android_client_info": {
+          "package_name": "com.citizenai.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB04_noNdFTfw70QDBQjZ-rFF1o-t3DboU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1001811384485:android:01f320021b46965d87154c",
+        "android_client_info": {
+          "package_name": "com.citizenai.app.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB04_noNdFTfw70QDBQjZ-rFF1o-t3DboU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

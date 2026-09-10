@@ -1,0 +1,318 @@
+<resources>
+    <string name="app_name">Citizen AI</string>
+    <string name="app_subtitle">Smart Public Problem Reporting &amp; Resolution</string>
+
+    <!-- Auth -->
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Sign in to your Citizen AI account</string>
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Join Citizen AI and make a difference</string>
+    <string name="email_hint">Email address</string>
+    <string name="password_hint">Password</string>
+    <string name="login_button">Login</string>
+    <string name="demo_citizen">Continue as Demo Citizen</string>
+    <string name="demo_worker">Continue as Demo Worker</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="register_button">Register</string>
+    <string name="have_account">Already have an account?</string>
+    <string name="sign_in">Sign In</string>
+
+    <!-- Home -->
+    <string name="good_morning">Good Morning,</string>
+    <string name="good_afternoon">Good Afternoon,</string>
+    <string name="good_evening">Good Evening,</string>
+    <string name="civic_impact_title">YOUR CIVIC IMPACT</string>
+    <string name="reports_count">Reports</string>
+    <string name="resolved_count">Resolved</string>
+    <string name="pending_count">Pending</string>
+    <string name="report_new_issue">Report New Issue</string>
+    <string name="recent_reports">Recent Reports</string>
+
+    <!-- Report flow -->
+    <string name="report_issue_title">Report Issue</string>
+    <string name="step_capture">Step 1 of 3</string>
+    <string name="step_analysis">Step 2 of 3</string>
+    <string name="step_details">Step 3 of 3</string>
+    <string name="capture_title">Capture the Issue</string>
+    <string name="capture_subtitle">Take a clear photo of the problem</string>
+    <string name="open_camera">Camera</string>
+    <string name="open_gallery">Gallery</string>
+    <string name="analyzing_title">AI Analysis</string>
+    <string name="ai_analyzing">AI is analyzing your image…</string>
+    <string name="ai_result_title">AI Analysis Result</string>
+    <string name="location_title">Location &amp; Details</string>
+    <string name="use_current_location">Use Current Location</string>
+    <string name="description_hint">Describe the issue in detail…</string>
+    <string name="category_label">Category</string>
+    <string name="submit_report">Submit Report</string>
+    <string name="submitting">Submitting report…</string>
+
+    <!-- Success -->
+    <string name="report_submitted">Report Submitted!</string>
+    <string name="thank_you">Thank you for your report.</string>
+    <string name="track_report">Track Report</string>
+    <string name="back_to_home">Back to Home</string>
+
+    <!-- Complaint detail -->
+    <string name="complaint_details">Complaint Details</string>
+    <string name="timeline_title">Progress Timeline</string>
+    <string name="add_comment">Add Comment</string>
+    <string name="post_comment">Post Comment</string>
+    <string name="verification_question">Has this issue been resolved?</string>
+    <string name="yes_resolved">YES, ISSUE RESOLVED</string>
+    <string name="no_not_resolved">NO, STILL NOT RESOLVED</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_map">Map</string>
+    <string name="nav_report">Report</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_history">History</string>
+
+    <!-- Worker -->
+    <string name="todays_tasks">Today\'s Tasks</string>
+    <string name="your_tasks">Your Tasks</string>
+    <string name="start_task">Start Task</string>
+    <string name="mark_completed">Mark as Completed</string>
+    <string name="before_photo">Before Photo</string>
+    <string name="after_photo">After Photo</string>
+    <string name="work_notes_hint">Add work notes…</string>
+    <string name="upload_after_photo">Upload After Photo</string>
+
+    <!-- Status labels -->
+    <string name="status_pending">Pending</string>
+    <string name="status_assigned">Assigned</string>
+    <string name="status_in_progress">In Progress</string>
+    <string name="status_citizen_verification">Awaiting Verification</string>
+    <string name="status_resolved">Resolved</string>
+    <string name="status_reopened">Reopened</string>
+    <string name="status_completed">Completed</string>
+
+    <!-- Priority -->
+    <string name="priority_low">Low</string>
+    <string name="priority_normal">Normal</string>
+    <string name="priority_high">High</string>
+    <string name="priority_critical">Critical</string>
+
+    <!-- Errors -->
+    <string name="error_no_internet">You\'re offline. Showing cached data.</string>
+    <string name="error_camera_permission">Camera permission is required to capture issues.</string>
+    <string name="error_location_permission">Location permission is required to attach location to reports.</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="error_invalid_credentials">Invalid email or password.</string>
+    <string name="error_image_required">Please capture or select an image first.</string>
+    <string name="error_location_required">Location is required to submit the report.</string>
+    <string name="error_description_required">Please add a description.</string>
+
+    <!-- Notifications -->
+    <string name="notifications_title">Notifications</string>
+    <string name="no_notifications">No notifications yet.</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="logout">Logout</string>
+    <string name="tasks_completed">Tasks Completed</string>
+    <string name="avg_completion_time">Avg. Completion</string>
+
+    <!-- Profile menu items -->
+    <string name="menu_edit_profile">Edit Profile</string>
+    <string name="menu_notification_settings">Notification Settings</string>
+    <string name="menu_privacy_security">Privacy &amp; Security</string>
+    <string name="menu_help_support">Help &amp; Support</string>
+    <string name="menu_about">About Citizen AI</string>
+    <string name="menu_language">Language</string>
+
+    <!-- Edit Profile Dialog -->
+    <string name="edit_profile">Edit Profile</string>
+    <string name="full_name_label">Full Name</string>
+    <string name="email_address_label">Email Address</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="cancel">Cancel</string>
+    <string name="profile_updated">Profile updated successfully!</string>
+
+    <!-- Notification Dialog -->
+    <string name="push_notifications">Push Notifications</string>
+    <string name="push_notifications_desc">Receive push alerts for updates</string>
+    <string name="email_alerts">Email Alerts</string>
+    <string name="email_alerts_desc">Get weekly civic summaries</string>
+    <string name="status_updates_label">Status Updates</string>
+    <string name="status_updates_desc">Real-time complaint resolution alerts</string>
+    <string name="sms_notifications">SMS Notifications</string>
+    <string name="sms_notifications_desc">SMS dispatch updates</string>
+    <string name="notification_saved">Notification preferences saved!</string>
+    <string name="done">Done</string>
+    <string name="close">Close</string>
+
+    <!-- Privacy Dialog -->
+    <string name="data_encryption">Data Encryption</string>
+    <string name="data_encryption_status">AES-256 Enabled</string>
+    <string name="location_access">Location Access</string>
+    <string name="location_access_status">Granted while using app</string>
+    <string name="camera_access">Camera Access</string>
+    <string name="camera_access_status">Granted for reporting</string>
+    <string name="clear_cache">Clear Temp Cache</string>
+    <string name="cache_cleared">Local cache &amp; temporary files cleared!</string>
+
+    <!-- Help Dialog -->
+    <string name="helpline_title">National Toll-Free Helpline</string>
+    <string name="helpline_number">📞 Call 14599</string>
+    <string name="helpline_desc">Available 24x7 for civic queries &amp; support</string>
+    <string name="email_helpdesk_label">Email Helpdesk</string>
+    <string name="faq_title">Frequently Asked Questions</string>
+    <string name="faq_ai">• How AI duplicate detection works?</string>
+    <string name="faq_resolution_time">• Average issue resolution time: 24 to 48 hrs.</string>
+
+    <!-- About Dialog -->
+    <string name="about_title">Citizen AI Mobile Platform</string>
+    <string name="about_version">Version 1.0.0 (Build 42)</string>
+    <string name="about_description">Citizen AI empowers residents to report municipal issues seamlessly with automated AI verification, smart geo-tagging, and real-time field worker tracking.</string>
+
+    <!-- Logout Dialog -->
+    <string name="logout_confirm_title">Logout</string>
+    <string name="logout_confirm_message">Are you sure you want to logout of your Citizen AI account?</string>
+
+    <!-- Language Dialog -->
+    <string name="language_dialog_title">Select Language</string>
+    <string name="language_english">English</string>
+    <string name="language_marathi">मराठी</string>
+    <string name="language_hindi">हिंदी</string>
+    <string name="language_selected">Language changed successfully</string>
+
+    <!-- Map -->
+    <string name="map_title">Civic Map</string>
+    <string name="no_reports_map">No reports to display</string>
+
+    <!-- General -->
+    <string name="loading">Loading…</string>
+    <string name="retry">Retry</string>
+    <string name="no_data">No data available.</string>
+    <string name="citizen_user">Citizen User</string>
+
+    <!-- Admin Navigation Tabs -->
+    <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_complaints">Complaints</string>
+    <string name="tab_workers">Workers</string>
+    <string name="tab_live_ops">Live Ops</string>
+
+    <!-- Worker Profile -->
+    <string name="worker_user">Worker User</string>
+    <string name="worker_subtitle">Field Worker &#x2022; Sanitation &amp; Roads</string>
+    <string name="stat_completed">Completed</string>
+    <string name="stat_in_progress">In Progress</string>
+    <string name="stat_avg_time">Avg Time</string>
+    <string name="menu_field_helpline">Field Operations Helpline</string>
+    <string name="field_helpline_title">Field Control Helpline</string>
+    <string name="field_helpline_number">Toll-Free Helpline: 📞 14599</string>
+    <string name="field_helpline_email">Email Helpdesk: ✉️ helpdesk@csc.gov.in</string>
+    <string name="field_helpline_office">Superintendent Office: Room 402, City Civic Center</string>
+    <string name="worker_name_label">Worker Name</string>
+    <string name="phone_number_label">Phone Number</string>
+    <string name="profile_saved">Profile saved!</string>
+    <string name="save">Save</string>
+
+    <!-- Login / Register -->
+    <string name="email_mobile_id_hint">Email / Mobile / Employee ID</string>
+    <string name="signing_in">Signing in…</string>
+    <string name="create_account">Create Account</string>
+    <string name="retry_upper">RETRY</string>
+
+    <!-- Worker Home -->
+    <string name="todays_tasks_header">TODAY&#x2019;S TASKS</string>
+    <string name="priority_critical_label">Critical</string>
+    <string name="priority_high_label">High</string>
+    <string name="priority_normal_label">Normal</string>
+    <string name="no_pending_tasks">No pending tasks!</string>
+    <string name="view_task">View Task</string>
+    <string name="km_away">km away</string>
+
+    <!-- Admin Dashboard -->
+    <string name="admin_dashboard_label">Admin Dashboard</string>
+    <string name="stat_total">Total</string>
+    <string name="stat_pending_label">Pending</string>
+    <string name="stat_in_progress_label">In Progress</string>
+    <string name="stat_resolved">Resolved</string>
+    <string name="critical_complaints_fmt">%1$d Critical Complaints</string>
+    <string name="critical_complaints_desc">Require immediate attention</string>
+    <string name="delayed_tasks_fmt">%1$d Delayed Tasks</string>
+    <string name="delayed_tasks_desc">Workers haven&#x2019;t updated in &gt; 30 mins</string>
+    <string name="active_workers_fmt">%1$d Active Workers</string>
+    <string name="total_workers_fmt">%1$d total workers in system</string>
+    <string name="high_priority_complaints">High Priority Complaints</string>
+    <string name="connection_error">Connection Error</string>
+
+    <!-- Audit String Additions -->
+    <string name="reject_task">Reject Task</string>
+    <string name="reject_task_reason_prompt">Please specify why you cannot take this task:</string>
+    <string name="reject_reason_placeholder">Equipment failure, out of domain…</string>
+    <string name="confirm_reject">Confirm Reject</string>
+    <string name="update_work_progress">Update Work Progress</string>
+    <string name="progress_percentage_fmt">Progress Percentage: %1$d%%</string>
+    <string name="progress_note">Progress Note</string>
+    <string name="progress_note_placeholder">Describe progress made so far…</string>
+    <string name="progress_photo_optional">Progress Photo (Optional)</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="submit_update">Submit Update</string>
+    <string name="task_details_title">Task Details</string>
+    <string name="citizens_report">Citizen&#x2019;s Report</string>
+    <string name="reject">Reject</string>
+    <string name="accept_task">Accept Task</string>
+    <string name="start_work">Start Work</string>
+    <string name="post_progress_update_fmt">Post Progress Update (%1$d%%)</string>
+    <string name="completion_report">Completion Report</string>
+    <string name="change_photo">Change Photo</string>
+    <string name="select_completion_photo">Select Completion Photo</string>
+    <string name="final_work_notes">Final Work Notes</string>
+    <string name="work_notes_placeholder">Describe the completed work in detail…</string>
+    <string name="submitting_dots">Submitting…</string>
+    <string name="submit_completion_report">Submit Completion Report</string>
+    <string name="task_completed_review">Task Completed &amp; Under Review</string>
+    <string name="task_history_title">Task History</string>
+    <string name="no_completed_tasks">No completed tasks yet</string>
+
+    <string name="image_preview">Image Preview</string>
+    <string name="retake">Retake</string>
+    <string name="continue_btn">Continue</string>
+    <string name="capture_issue">Capture the Issue</string>
+    <string name="take_clear_photo">Take a clear photo of the problem</string>
+    <string name="camera_subtitle">Take a photo right now</string>
+    <string name="gallery_subtitle">Choose from your photos</string>
+
+    <string name="ai_analysis_complete">AI Analysis Complete</string>
+    <string name="ai_analysis_result_header">AI ANALYSIS RESULT</string>
+    <string name="issue_label">Issue</string>
+    <string name="severity_label">Severity</string>
+    <string name="department_label">Department</string>
+    <string name="confidence_label">Confidence</string>
+    <string name="analysis_failed">Analysis Failed</string>
+    <string name="try_again">Try Again</string>
+
+    <string name="location_header">Location</string>
+    <string name="category_header">Category</string>
+    <string name="description_header">Description</string>
+    <string name="tap_map_detect_location">Tap map to auto-detect your location</string>
+    <string name="getting_location">Getting location…</string>
+    <string name="submitting_report_dots">Submitting report…</string>
+
+    <string name="has_issue_been_resolved">Has this issue been resolved?</string>
+    <string name="yes_issue_resolved_upper">YES, ISSUE RESOLVED</string>
+    <string name="no_not_resolved_upper">NO, STILL NOT RESOLVED</string>
+    <string name="why_not_resolved">Why is it not resolved?</string>
+    <string name="explain_issue_placeholder">Explain the issue…</string>
+    <string name="comments_fmt">Comments (%1$d)</string>
+
+    <string name="my_reports_title">My Reports</string>
+    <string name="no_reports_category">No reports in this category</string>
+    <string name="issue_map_title">Issue Map</string>
+    <string name="no_complaints_filter">No complaints found for selected filter.</string>
+    <string name="no_notifications_yet">No notifications yet</string>
+    <string name="no_complaints_found">No complaints found</string>
+    <string name="search_complaints_hint">Search by ID, issue, location…</string>
+    <string name="filter_all">All</string>
+    <string name="status_reported">Reported</string>
+    <string name="status_work_completed">Completed</string>
+    <string name="complaints_title">Complaints</string>
+    <string name="view_details">View Details</string>
+</resources>

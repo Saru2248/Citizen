@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Citizen AI</string>
+    <string name="app_subtitle">सार्वजनिक समस्या रिपोर्ट और समाधान</string>
+
+    <!-- Auth -->
+    <string name="login_title">वापस स्वागत है</string>
+    <string name="login_subtitle">अपने Citizen AI खाते में साइन इन करें</string>
+    <string name="register_title">खाता बनाएं</string>
+    <string name="register_subtitle">Citizen AI से जुड़ें और बदलाव लाएं</string>
+    <string name="email_hint">ईमेल पता</string>
+    <string name="password_hint">पासवर्ड</string>
+    <string name="login_button">लॉगिन</string>
+    <string name="demo_citizen">डेमो नागरिक के रूप में जारी रखें</string>
+    <string name="demo_worker">डेमो कर्मचारी के रूप में जारी रखें</string>
+    <string name="forgot_password">पासवर्ड भूल गए?</string>
+    <string name="no_account">खाता नहीं है?</string>
+    <string name="register_button">पंजीकरण करें</string>
+    <string name="have_account">पहले से खाता है?</string>
+    <string name="sign_in">साइन इन करें</string>
+
+    <!-- Home -->
+    <string name="good_morning">सुप्रभात,</string>
+    <string name="good_afternoon">शुभ दोपहर,</string>
+    <string name="good_evening">शुभ संध्या,</string>
+    <string name="civic_impact_title">आपका नागरिक प्रभाव</string>
+    <string name="reports_count">रिपोर्ट</string>
+    <string name="resolved_count">हल किए</string>
+    <string name="pending_count">लंबित</string>
+    <string name="report_new_issue">नई समस्या रिपोर्ट करें</string>
+    <string name="recent_reports">हाल की रिपोर्ट</string>
+
+    <!-- Report flow -->
+    <string name="report_issue_title">समस्या रिपोर्ट करें</string>
+    <string name="step_capture">चरण 1 में से 3</string>
+    <string name="step_analysis">चरण 2 में से 3</string>
+    <string name="step_details">चरण 3 में से 3</string>
+    <string name="capture_title">समस्या कैप्चर करें</string>
+    <string name="capture_subtitle">समस्या की स्पष्ट फोटो लें</string>
+    <string name="open_camera">कैमरा</string>
+    <string name="open_gallery">गैलरी</string>
+    <string name="analyzing_title">AI विश्लेषण</string>
+    <string name="ai_analyzing">AI आपकी छवि का विश्लेषण कर रहा है…</string>
+    <string name="ai_result_title">AI विश्लेषण परिणाम</string>
+    <string name="location_title">स्थान और विवरण</string>
+    <string name="use_current_location">वर्तमान स्थान उपयोग करें</string>
+    <string name="description_hint">समस्या का विस्तार से वर्णन करें…</string>
+    <string name="category_label">श्रेणी</string>
+    <string name="submit_report">रिपोर्ट जमा करें</string>
+    <string name="submitting">रिपोर्ट जमा हो रही है…</string>
+
+    <!-- Success -->
+    <string name="report_submitted">रिपोर्ट जमा हुई!</string>
+    <string name="thank_you">आपकी रिपोर्ट के लिए धन्यवाद.</string>
+    <string name="track_report">रिपोर्ट ट्रैक करें</string>
+    <string name="back_to_home">होम पर वापस जाएं</string>
+
+    <!-- Complaint detail -->
+    <string name="complaint_details">शिकायत विवरण</string>
+    <string name="timeline_title">प्रगति टाइमलाइन</string>
+    <string name="add_comment">टिप्पणी जोड़ें</string>
+    <string name="post_comment">टिप्पणी पोस्ट करें</string>
+    <string name="verification_question">क्या यह समस्या हल हो गई है?</string>
+    <string name="yes_resolved">हाँ, समस्या हल हुई</string>
+    <string name="no_not_resolved">नहीं, अभी तक हल नहीं हुई</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">होम</string>
+    <string name="nav_map">नक्शा</string>
+    <string name="nav_report">रिपोर्ट</string>
+    <string name="nav_reports">रिपोर्ट</string>
+    <string name="nav_profile">प्रोफ़ाइल</string>
+    <string name="nav_tasks">कार्य</string>
+    <string name="nav_history">इतिहास</string>
+
+    <!-- Worker -->
+    <string name="todays_tasks">आज के कार्य</string>
+    <string name="your_tasks">आपके कार्य</string>
+    <string name="start_task">कार्य शुरू करें</string>
+    <string name="mark_completed">पूर्ण के रूप में चिह्नित करें</string>
+    <string name="before_photo">पहले की फोटो</string>
+    <string name="after_photo">बाद की फोटो</string>
+    <string name="work_notes_hint">कार्य नोट जोड़ें…</string>
+    <string name="upload_after_photo">बाद की फोटो अपलोड करें</string>
+
+    <!-- Status labels -->
+    <string name="status_pending">लंबित</string>
+    <string name="status_assigned">सौंपा गया</string>
+    <string name="status_in_progress">प्रगति में</string>
+    <string name="status_citizen_verification">सत्यापन की प्रतीक्षा में</string>
+    <string name="status_resolved">हल किया गया</string>
+    <string name="status_reopened">पुनः खोला गया</string>
+    <string name="status_completed">पूर्ण हुआ</string>
+
+    <!-- Priority -->
+    <string name="priority_low">कम</string>
+    <string name="priority_normal">सामान्य</string>
+    <string name="priority_high">उच्च</string>
+    <string name="priority_critical">गंभीर</string>
+
+    <!-- Errors -->
+    <string name="error_no_internet">आप ऑफ़लाइन हैं। कैश डेटा दिखाया जा रहा है.</string>
+    <string name="error_camera_permission">समस्या कैप्चर करने के लिए कैमरा अनुमति आवश्यक है.</string>
+    <string name="error_location_permission">रिपोर्ट में स्थान जोड़ने के लिए स्थान अनुमति आवश्यक है.</string>
+    <string name="error_generic">कुछ गलत हुआ। कृपया पुनः प्रयास करें.</string>
+    <string name="error_invalid_credentials">अमान्य ईमेल या पासवर्ड.</string>
+    <string name="error_image_required">कृपया पहले कोई छवि कैप्चर या चुनें.</string>
+    <string name="error_location_required">रिपोर्ट जमा करने के लिए स्थान आवश्यक है.</string>
+    <string name="error_description_required">कृपया विवरण जोड़ें.</string>
+
+    <!-- Notifications -->
+    <string name="notifications_title">सूचनाएं</string>
+    <string name="no_notifications">अभी तक कोई सूचना नहीं.</string>
+
+    <!-- Profile -->
+    <string name="profile_title">प्रोफ़ाइल</string>
+    <string name="logout">लॉगआउट</string>
+    <string name="tasks_completed">पूर्ण किए गए कार्य</string>
+    <string name="avg_completion_time">औसत पूर्णता</string>
+
+    <!-- Profile menu items -->
+    <string name="menu_edit_profile">प्रोफ़ाइल संपादित करें</string>
+    <string name="menu_notification_settings">सूचना सेटिंग</string>
+    <string name="menu_privacy_security">गोपनीयता और सुरक्षा</string>
+    <string name="menu_help_support">सहायता और समर्थन</string>
+    <string name="menu_about">Citizen AI के बारे में</string>
+    <string name="menu_language">भाषा</string>
+
+    <!-- Edit Profile Dialog -->
+    <string name="edit_profile">प्रोफ़ाइल संपादित करें</string>
+    <string name="full_name_label">पूरा नाम</string>
+    <string name="email_address_label">ईमेल पता</string>
+    <string name="save_changes">बदलाव सहेजें</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="profile_updated">प्रोफ़ाइल सफलतापूर्वक अपडेट हुई!</string>
+
+    <!-- Notification Dialog -->
+    <string name="push_notifications">पुश सूचनाएं</string>
+    <string name="push_notifications_desc">अपडेट के लिए पुश अलर्ट प्राप्त करें</string>
+    <string name="email_alerts">ईमेल अलर्ट</string>
+    <string name="email_alerts_desc">साप्ताहिक नागरिक सारांश पाएं</string>
+    <string name="status_updates_label">स्थिति अपडेट</string>
+    <string name="status_updates_desc">रियल-टाइम शिकायत समाधान अलर्ट</string>
+    <string name="sms_notifications">SMS सूचनाएं</string>
+    <string name="sms_notifications_desc">SMS डिस्पैच अपडेट</string>
+    <string name="notification_saved">सूचना प्राथमिकताएं सहेजी गईं!</string>
+    <string name="done">हो गया</string>
+    <string name="close">बंद करें</string>
+
+    <!-- Privacy Dialog -->
+    <string name="data_encryption">डेटा एन्क्रिप्शन</string>
+    <string name="data_encryption_status">AES-256 सक्रिय</string>
+    <string name="location_access">स्थान पहुंच</string>
+    <string name="location_access_status">ऐप उपयोग के दौरान अनुमति</string>
+    <string name="camera_access">कैमरा पहुंच</string>
+    <string name="camera_access_status">रिपोर्टिंग के लिए अनुमति</string>
+    <string name="clear_cache">अस्थायी कैश साफ़ करें</string>
+    <string name="cache_cleared">स्थानीय कैश और अस्थायी फ़ाइलें साफ़ हुईं!</string>
+
+    <!-- Help Dialog -->
+    <string name="helpline_title">राष्ट्रीय टोल-फ्री हेल्पलाइन</string>
+    <string name="helpline_number">📞 14599 पर कॉल करें</string>
+    <string name="helpline_desc">नागरिक प्रश्नों और सहायता के लिए 24x7 उपलब्ध</string>
+    <string name="email_helpdesk_label">ईमेल हेल्पडेस्क</string>
+    <string name="faq_title">अक्सर पूछे जाने वाले प्रश्न</string>
+    <string name="faq_ai">• AI डुप्लिकेट डिटेक्शन कैसे काम करता है?</string>
+    <string name="faq_resolution_time">• औसत समस्या समाधान समय: 24 से 48 घंटे.</string>
+
+    <!-- About Dialog -->
+    <string name="about_title">Citizen AI मोबाइल प्लेटफ़ॉर्म</string>
+    <string name="about_version">संस्करण 1.0.0 (बिल्ड 42)</string>
+    <string name="about_description">Citizen AI निवासियों को स्वचालित AI सत्यापन, स्मार्ट जियो-टैगिंग और रियल-टाइम फील्ड वर्कर ट्रैकिंग के साथ नगरपालिका समस्याओं की रिपोर्ट करने में सक्षम बनाता है.</string>
+
+    <!-- Logout Dialog -->
+    <string name="logout_confirm_title">लॉगआउट</string>
+    <string name="logout_confirm_message">क्या आप अपने Citizen AI खाते से लॉगआउट करना चाहते हैं?</string>
+
+    <!-- Language Dialog -->
+    <string name="language_dialog_title">भाषा चुनें</string>
+    <string name="language_english">English</string>
+    <string name="language_marathi">मराठी</string>
+    <string name="language_hindi">हिंदी</string>
+    <string name="language_selected">भाषा सफलतापूर्वक बदली गई</string>
+
+    <!-- Map -->
+    <string name="map_title">नागरिक नक्शा</string>
+    <string name="no_reports_map">दिखाने के लिए कोई रिपोर्ट नहीं</string>
+
+    <!-- General -->
+    <string name="loading">लोड हो रहा है…</string>
+    <string name="retry">पुनः प्रयास करें</string>
+    <string name="no_data">कोई डेटा उपलब्ध नहीं.</string>
+    <string name="citizen_user">नागरिक उपयोगकर्ता</string>
+
+    <!-- Admin Navigation Tabs -->
+    <string name="tab_dashboard">डैशबोर्ड</string>
+    <string name="tab_complaints">शिकायतें</string>
+    <string name="tab_workers">कर्मचारी</string>
+    <string name="tab_live_ops">लाइव ऑपरेशन</string>
+
+    <!-- Worker Profile -->
+    <string name="worker_user">कर्मचारी उपयोगकर्ता</string>
+    <string name="worker_subtitle">फील्ड वर्कर • सफाई और सड़कें</string>
+    <string name="stat_completed">पूर्ण</string>
+    <string name="stat_in_progress">प्रगति में</string>
+    <string name="stat_avg_time">औसत समय</string>
+    <string name="menu_field_helpline">फील्ड ऑपरेशन हेल्पलाइन</string>
+    <string name="field_helpline_title">फील्ड कंट्रोल हेल्पलाइन</string>
+    <string name="field_helpline_number">टोल-फ्री हेल्पलाइन: 📞 14599</string>
+    <string name="field_helpline_email">ईमेल हेल्पडेस्क: ✉️ helpdesk@csc.gov.in</string>
+    <string name="field_helpline_office">अधीक्षक कार्यालय: कमरा 402, सिटी सिविक सेंटर</string>
+    <string name="worker_name_label">कर्मचारी का नाम</string>
+    <string name="phone_number_label">फोन नंबर</string>
+    <string name="profile_saved">प्रोफ़ाइल सहेजी गई!</string>
+    <string name="save">सहेजें</string>
+
+    <!-- Login / Register -->
+    <string name="email_mobile_id_hint">ईमेल / मोबाइल / कर्मचारी ID</string>
+    <string name="signing_in">साइन इन हो रहा है…</string>
+    <string name="create_account">खाता बनाएं</string>
+    <string name="retry_upper">पुनः प्रयास</string>
+
+    <!-- Worker Home -->
+    <string name="todays_tasks_header">आज के कार्य</string>
+    <string name="priority_critical_label">गंभीर</string>
+    <string name="priority_high_label">उच्च</string>
+    <string name="priority_normal_label">सामान्य</string>
+    <string name="no_pending_tasks">कोई लंबित कार्य नहीं!</string>
+    <string name="view_task">कार्य देखें</string>
+    <string name="km_away">किमी दूर</string>
+
+    <!-- Admin Dashboard -->
+    <string name="admin_dashboard_label">एडमिन डैशबोर्ड</string>
+    <string name="stat_total">कुल</string>
+    <string name="stat_pending_label">लंबित</string>
+    <string name="stat_in_progress_label">प्रगति में</string>
+    <string name="stat_resolved">हल किए</string>
+    <string name="critical_complaints_fmt">%1$d गंभीर शिकायतें</string>
+    <string name="critical_complaints_desc">तत्काल ध्यान देना आवश्यक</string>
+    <string name="delayed_tasks_fmt">%1$d विलंबित कार्य</string>
+    <string name="delayed_tasks_desc">कर्मचारियों ने 30 मिनट से अधिक समय से अपडेट नहीं किया</string>
+    <string name="active_workers_fmt">%1$d सक्रिय कर्मचारी</string>
+    <string name="total_workers_fmt">सिस्टम में कुल %1$d कर्मचारी</string>
+    <string name="high_priority_complaints">उच्च प्राथमिकता वाली शिकायतें</string>
+    <string name="connection_error">कनेक्शन त्रुटि</string>
+
+    <!-- Audit String Additions -->
+    <string name="reject_task">कार्य अस्वीकार करें</string>
+    <string name="reject_task_reason_prompt">कृपया स्पष्ट करें कि आप यह कार्य क्यों नहीं ले सकते:</string>
+    <string name="reject_reason_placeholder">उपकरण विफलता, क्षेत्र से बाहर…</string>
+    <string name="confirm_reject">अस्वीकृति की पुष्टि करें</string>
+    <string name="update_work_progress">कार्य प्रगति अपडेट करें</string>
+    <string name="progress_percentage_fmt">प्रगति प्रतिशत: %1$d%%</string>
+    <string name="progress_note">प्रगति टिप्पणी</string>
+    <string name="progress_note_placeholder">अब तक की प्रगति का वर्णन करें…</string>
+    <string name="progress_photo_optional">प्रगति फोटो (वैकल्पिक)</string>
+    <string name="add_photo">फोटो जोड़ें</string>
+    <string name="submit_update">अपडेट जमा करें</string>
+    <string name="task_details_title">कार्य विवरण</string>
+    <string name="citizens_report">नागरिक की रिपोर्ट</string>
+    <string name="reject">अस्वीकार करें</string>
+    <string name="accept_task">कार्य स्वीकार करें</string>
+    <string name="start_work">कार्य शुरू करें</string>
+    <string name="post_progress_update_fmt">प्रगति अपडेट पोस्ट करें (%1$d%%)</string>
+    <string name="completion_report">समाप्ति रिपोर्ट</string>
+    <string name="change_photo">फोटो बदलें</string>
+    <string name="select_completion_photo">समाप्ति फोटो चुनें</string>
+    <string name="final_work_notes">अंतिम कार्य टिप्पणियां</string>
+    <string name="work_notes_placeholder">पूरे हुए कार्य का विस्तार से वर्णन करें…</string>
+    <string name="submitting_dots">जमा हो रहा है…</string>
+    <string name="submit_completion_report">समाप्ति रिपोर्ट जमा करें</string>
+    <string name="task_completed_review">कार्य पूर्ण और समीक्षाधीन</string>
+    <string name="task_history_title">कार्य इतिहास</string>
+    <string name="no_completed_tasks">अभी तक कोई पूर्ण कार्य नहीं</string>
+
+    <string name="image_preview">छवि पूर्वावलोकन</string>
+    <string name="retake">पुनः लें</string>
+    <string name="continue_btn">जारी रखें</string>
+    <string name="capture_issue">समस्या कैप्चर करें</string>
+    <string name="take_clear_photo">समस्या की स्पष्ट फोटो लें</string>
+    <string name="camera_subtitle">अभी फोटो लें</string>
+    <string name="gallery_subtitle">अपनी गैलरी से चुनें</string>
+
+    <string name="ai_analysis_complete">AI विश्लेषण पूर्ण हुआ</string>
+    <string name="ai_analysis_result_header">AI विश्लेषण परिणाम</string>
+    <string name="issue_label">समस्या</string>
+    <string name="severity_label">गंभीरता</string>
+    <string name="department_label">विभाग</string>
+    <string name="confidence_label">विश्वसनीयता</string>
+    <string name="analysis_failed">विश्लेषण विफल रहा</string>
+    <string name="try_again">पुनः प्रयास करें</string>
+
+    <string name="location_header">स्थान</string>
+    <string name="category_header">श्रेणी</string>
+    <string name="description_header">विवरण</string>
+    <string name="tap_map_detect_location">अपना स्थान स्वचालित रूप से खोजने के लिए नक्शे पर टैप करें</string>
+    <string name="getting_location">स्थान प्राप्त किया जा रहा है…</string>
+    <string name="submitting_report_dots">रिपोर्ट जमा हो रही है…</string>
+
+    <string name="has_issue_been_resolved">क्या यह समस्या हल हो गई है?</string>
+    <string name="yes_issue_resolved_upper">हाँ, समस्या हल हो गई</string>
+    <string name="no_not_resolved_upper">नहीं, अभी तक हल नहीं हुई</string>
+    <string name="why_not_resolved">यह क्यों हल नहीं हुआ है?</string>
+    <string name="explain_issue_placeholder">समस्या स्पष्ट करें…</string>
+    <string name="comments_fmt">टिप्पणियां (%1$d)</string>
+
+    <string name="my_reports_title">मेरी रिपोर्ट</string>
+    <string name="no_reports_category">इस श्रेणी में कोई रिपोर्ट नहीं है</string>
+    <string name="issue_map_title">समस्या नक्शा</string>
+    <string name="no_complaints_filter">चयनित फ़िल्टर के लिए कोई शिकायत नहीं मिली.</string>
+    <string name="no_notifications_yet">अभी तक कोई सूचनाएं नहीं</string>
+    <string name="no_complaints_found">कोई शिकायत नहीं मिली</string>
+    <string name="search_complaints_hint">ID, समस्या, स्थान द्वारा खोजें…</string>
+    <string name="filter_all">सभी</string>
+    <string name="status_reported">रिपोर्ट किया गया</string>
+    <string name="status_work_completed">पूर्ण हुआ</string>
+    <string name="complaints_title">शिकायतें</string>
+    <string name="view_details">विवरण देखें</string>
+</resources>

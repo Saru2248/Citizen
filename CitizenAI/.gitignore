@@ -1,0 +1,27 @@
+# ─── Firebase (SECRET — never commit these) ───────────────────────────────────
+# google-services.json contains your Firebase project ID, API keys, and app IDs.
+# Anyone who gets this file can use your Firebase project.
+app/google-services.json
+
+# ─── Android / Gradle build outputs ──────────────────────────────────────────
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+
+# ─── Kotlin / Java ───────────────────────────────────────────────────────────
+*.class
+*.log
+
+# ─── Local developer secrets ─────────────────────────────────────────────────
+# local.properties contains your Android SDK path — unique per machine.
+# Never commit it. Each developer has their own.
+local.properties

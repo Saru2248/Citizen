@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color: #0F172A;
+    background-color: #F8FAFC;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Leaflet Map Custom Styling */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.75rem;
+  z-index: 10;
+}
+
+/* Status Badges */
+.badge-reported { background-color: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.badge-ai { background-color: #F5F3FF; color: #6D28D9; border: 1px solid #DDD6FE; }
+.badge-dept { background-color: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
+.badge-worker { background-color: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+.badge-progress { background-color: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+.badge-resolved { background-color: #ECFDF5; color: #065F46; border: 1px solid #6EE7B7; }
+.badge-critical { background-color: #FEF2F2; color: #B91C1C; border: 1px solid #FCA5A5; }
+
+/* Pulse animation for live map & markers */
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 0.4; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.marker-critical {
+  animation: pulse-ring 2s infinite ease-in-out;
+}
