@@ -5,7 +5,7 @@ const { authenticate, requireAdmin } = require('../middleware/auth');
 const {
   getAllComplaints, getComplaintById, assignWorker, updateComplaintStatus,
   updatePriority, updateDepartment, postAdminComment, escalateComplaint,
-  getAllWorkers, getActiveWorkers, getWorkerById, createWorker, toggleWorkerStatus, deleteWorker,
+  getAllWorkers, getActiveWorkers, getWorkerById, createWorker, updateWorker, toggleWorkerStatus, deleteWorker,
   getAdminStats, getWorkerReports, getDepartments, saveDepartment,
   getAllUsers, deleteUser, getAuditLogs,
 } = require('../controllers/adminController');
@@ -26,6 +26,8 @@ router.get('/workers/active', authenticate, requireAdmin, getActiveWorkers);
 router.get('/workers', authenticate, requireAdmin, getAllWorkers);
 router.post('/workers', authenticate, requireAdmin, createWorker);
 router.get('/workers/:id', authenticate, requireAdmin, getWorkerById);
+router.put('/workers/:id', authenticate, requireAdmin, updateWorker);
+router.patch('/workers/:id', authenticate, requireAdmin, updateWorker);
 router.patch('/workers/:id/status', authenticate, requireAdmin, toggleWorkerStatus);
 router.delete('/workers/:id', authenticate, requireAdmin, deleteWorker);
 

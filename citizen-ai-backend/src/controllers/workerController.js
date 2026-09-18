@@ -686,6 +686,117 @@ const getWorkerDashboard = async (req, res, next) => {
   }
 };
 
+// POST /api/auth/worker/login and /api/worker/auth/login
+const workerLogin = async (req, res, next) => {
+  try {
+    const { identifier, workerId, mobileNumber, phone, username, password } = req.body;
+    const inputIdentifier = (identifier || workerId || mobileNumber || phone || username || '').trim();
+
+    if (!inputIdentifier || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Worker ID/Mobile Number and password are required.',
+        errorCode: 'MISSING_FIELDS',
+      });
+    }
+
+    const normalizedPhone = normalizePhoneNumber(inputIdentifier);
+    const tenDigit = normalizedPhone ? normalizedPhone.replace(/^\+91/, '').replace(/^\+/, '') : '';
+
+    const query = [
+      { workerId: inputIdentifier },
+      { employeeId: inputIdentifier },
+      { mobileNumber: inputIdentifier },
+      { phone: inputIdentifier },
+      { email: inputIdentifier.toLowerCase() },
+    ];
+
+    if (normalizedPhone) {
+      query.push({ mobileNumber: normalizedPhone });
+      query.push({ phone: normalizedPhone });
+    }
+    if (tenDigit) {
+      query.push({ mobileNumber: tenDigit });
+      query.push({ phone: tenDigit });
+    }
+
+    const worker = await User.findOne({
+      role: { $in: ['WORKER', 'FIELD_WORKER'] },
+      $or: query,
+    }).select('+passwordHash');
+
+    if (!worker) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid Worker ID/Mobile Number or Password',
+        errorCode: 'INVALID_CREDENTIALS',
+      });
+    }
+
+    const isMatch = await worker.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid Worker ID/Mobile Number or Password',
+        errorCode: 'INVALID_CREDENTIALS',
+      });
+    }
+
+    const isActive = worker.isActive !== false && worker.accountStatus === 'ACTIVE';
+    if (!isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your worker account is inactive. Contact your administrator.',
+        errorCode: 'ACCOUNT_INACTIVE',
+      });
+    }
+
+    worker.lastOtpVerifiedAt = new Date();
+    worker.totalLogins = (worker.totalLogins || 0) + 1;
+    await worker.save();
+
+    // Record login activity
+    const todayStr = new Date().toISOString().split('T')[0];
+    try {
+      await WorkerLoginActivity.create({
+        workerId: worker.workerId || `WRK-${worker._id.toString().slice(-4).toUpperCase()}`,
+        workerUserId: worker._id,
+        mobileNumber: worker.mobileNumber || worker.phone,
+        loginAt: new Date(),
+        loginDate: todayStr,
+        ipAddress: req.ip || (req.socket && req.socket.remoteAddress) || null,
+        userAgent: req.headers['user-agent'] || null,
+      });
+    } catch (actErr) {
+      console.warn('[WORKER LOGIN] Could not record login activity:', actErr.message);
+    }
+
+    const token = jwt.sign(
+      { id: worker._id.toString(), role: worker.role, workerId: worker.workerId },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    const publicWorker = worker.toPublicJSON();
+
+    console.log(`[WORKER LOGIN] Worker authenticated successfully: ${worker.name} (${worker.workerId})`);
+
+    return res.status(200).json({
+      success: true,
+      token,
+      user: publicWorker,
+      data: {
+        token,
+        worker: publicWorker,
+        ...publicWorker,
+      },
+    });
+  } catch (err) {
+    console.error('[WORKER LOGIN] Error:', err);
+    next(err);
+  }
+};
+
 module.exports = {
   getWorkerProfile,
   getWorkerDashboard,
@@ -700,4 +811,5 @@ module.exports = {
   getTaskReport,
   validateWorkerCredentials,
   verifyWorkerOtp,
+  workerLogin,
 };

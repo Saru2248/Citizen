@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Users, UserPlus, HardHat, Phone, Mail, CheckCircle2, Clock, Power, Shield, Trash2 } from 'lucide-react';
+import { Users, UserPlus, HardHat, Phone, Mail, CheckCircle2, Clock, Power, Shield, Trash2, Edit3 } from 'lucide-react';
 import { UserProfile, Department, Complaint } from '../types';
 import { adminApi } from '../services/apiService';
+import { EditWorkerModal } from '../components/EditWorkerModal';
 
 interface WorkersViewProps {
   workers: UserProfile[];
@@ -23,6 +24,7 @@ export const WorkersView: React.FC<WorkersViewProps> = ({
   const [filterDept, setFilterDept] = useState('ALL');
   const [search, setSearch] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingWorker, setEditingWorker] = useState<UserProfile | null>(null);
 
   const handleDeleteWorker = async (id: string, name: string) => {
     if (!window.confirm(`Are you sure you want to delete the profile for "${name}"? This action cannot be undone.`)) {
@@ -153,6 +155,14 @@ export const WorkersView: React.FC<WorkersViewProps> = ({
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
+                            onClick={() => setEditingWorker(w)}
+                            className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition flex items-center gap-1 shadow-sm"
+                            title="Edit Profile & Password"
+                          >
+                            <Edit3 size={13} /> Edit
+                          </button>
+
+                          <button
                             onClick={async () => {
                               await adminApi.toggleWorkerStatus(w.id).catch(console.error);
                               if (onRefresh) onRefresh();
@@ -181,6 +191,16 @@ export const WorkersView: React.FC<WorkersViewProps> = ({
           </table>
         </div>
       </div>
+
+      <EditWorkerModal
+        isOpen={!!editingWorker}
+        worker={editingWorker}
+        departments={departments}
+        onClose={() => setEditingWorker(null)}
+        onSuccess={() => {
+          if (onRefresh) onRefresh();
+        }}
+      />
     </div>
   );
 };

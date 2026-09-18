@@ -45,16 +45,19 @@ object NetworkModule {
         return Interceptor { chain ->
             val requestBuilder = chain.request().newBuilder()
             val token = runBlocking {
-                val user = firebaseAuth.currentUser
-                if (user != null) {
-                    try {
-                        val task = user.getIdToken(false)
-                        com.google.android.gms.tasks.Tasks.await(task, 5, TimeUnit.SECONDS)?.token
-                    } catch (e: Exception) {
-                        sessionManager.authToken.firstOrNull()
-                    }
+                val cached = sessionManager.authToken.firstOrNull()
+                if (!cached.isNullOrEmpty()) {
+                    cached
                 } else {
-                    sessionManager.authToken.firstOrNull()
+                    val user = firebaseAuth.currentUser
+                    if (user != null) {
+                        try {
+                            val task = user.getIdToken(false)
+                            com.google.android.gms.tasks.Tasks.await(task, 2, TimeUnit.SECONDS)?.token
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } else null
                 }
             }
             if (!token.isNullOrEmpty()) {
@@ -70,7 +73,7 @@ object NetworkModule {
         val logging = HttpLoggingInterceptor { message ->
             Log.d(TAG, "[OkHttp] $message")
         }.apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
         }
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)

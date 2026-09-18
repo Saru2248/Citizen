@@ -68,13 +68,14 @@ const initSocket = (server) => {
 
       if (socket.user.role === 'WORKER' || socket.user.role === 'FIELD_WORKER') {
         socket.join(`worker:${uId}`);
+        if (socket.user.workerId) socket.join(`worker:${socket.user.workerId}`);
         if (fbUid) socket.join(`worker:${fbUid}`);
 
         console.log('[Worker Socket] Connection requested');
         console.log('[Worker Socket] Authentication successful');
-        console.log(`[Worker Socket] Worker UID: ${fbUid || uId}`);
+        console.log(`[Worker Socket] Worker UID: ${fbUid || uId}, Worker ID: ${socket.user.workerId}`);
         console.log('[Worker Socket] Worker role verified');
-        console.log(`[Worker Socket] Joined authorized room: worker:${fbUid || uId}`);
+        console.log(`[Worker Socket] Joined authorized room: worker:${socket.user.workerId || uId}`);
       }
 
       if (['ADMIN', 'SUPER_ADMIN'].includes(socket.user.role)) {
@@ -85,20 +86,30 @@ const initSocket = (server) => {
     socket.on('join_room', (room) => {
       if (!room) return;
       // Server authorization check for room joins
-      if (socket.user) {
+      if (room.startsWith('worker:') || room.startsWith('user:') || room.startsWith('citizen:') || room === 'admin') {
+        if (!socket.user) {
+          console.warn(`[Socket.IO] Unauthenticated room join rejected for: ${room}`);
+          return;
+        }
         const uId = socket.user._id.toString();
         const fbUid = socket.user.firebaseUid;
+        const wId = socket.user.workerId;
 
-        if (room.startsWith('worker:') || room.startsWith('user:') || room.startsWith('citizen:')) {
-          const target = room.split(':')[1];
-          if (target === uId || target === fbUid || ['ADMIN', 'SUPER_ADMIN'].includes(socket.user.role)) {
-            socket.join(room);
-            console.log(`[Socket.IO] Socket ${socket.id} joined authorized room: ${room}`);
-            return;
-          } else {
-            console.warn(`[Socket.IO] Unauthorized room join attempt by user ${uId} for room: ${room}`);
-            return;
+        if (room === 'admin') {
+          if (['ADMIN', 'SUPER_ADMIN'].includes(socket.user.role)) {
+            socket.join('admin');
           }
+          return;
+        }
+
+        const target = room.split(':')[1];
+        if (target === uId || target === fbUid || (wId && target === wId) || ['ADMIN', 'SUPER_ADMIN'].includes(socket.user.role)) {
+          socket.join(room);
+          console.log(`[Socket.IO] Socket ${socket.id} joined authorized room: ${room}`);
+          return;
+        } else {
+          console.warn(`[Socket.IO] Unauthorized room join attempt by user ${uId} for room: ${room}`);
+          return;
         }
       }
       socket.join(room);

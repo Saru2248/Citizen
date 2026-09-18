@@ -6,6 +6,7 @@ export interface UserProfile {
   name: string;
   email: string;
   phone?: string;
+  mobileNumber?: string;
   role: UserRole;
   adminLevel?: AdminLevel;
   departmentId?: string;
@@ -13,6 +14,7 @@ export interface UserProfile {
   workerId?: string;
   avatarUrl?: string;
   status?: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+  accountStatus?: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
   tasksCompleted?: number;
   tasksInProgress?: number;
   avgCompletionTimeHours?: number;

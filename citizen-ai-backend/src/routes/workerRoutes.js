@@ -17,9 +17,11 @@ const {
   getTaskReport,
   validateWorkerCredentials,
   verifyWorkerOtp,
+  workerLogin,
 } = require('../controllers/workerController');
 
-// Worker Auth Validation & OTP Verification
+// Worker Auth (Credentials & legacy OTP)
+router.post('/auth/login', workerLogin);
 router.post('/auth/validate', validateWorkerCredentials);
 router.post('/auth/verify', verifyWorkerOtp);
 

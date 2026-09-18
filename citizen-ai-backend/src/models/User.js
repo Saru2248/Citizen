@@ -45,6 +45,7 @@ userSchema.pre('save', async function (next) {
     this.isActive = this.accountStatus === 'ACTIVE';
   }
   if (!this.isModified('passwordHash') || !this.passwordHash || this.passwordHash === 'FIREBASE_AUTH_USER') return next();
+  if (/^\$2[abxy]\$\d+\$/.test(this.passwordHash)) return next();
   this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
   next();
 });

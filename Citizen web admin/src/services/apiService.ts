@@ -39,6 +39,7 @@ const req = async <T>(
 
 const get = <T>(path: string) => req<T>('GET', path);
 const post = <T>(path: string, body?: any, isFormData = false) => req<T>('POST', path, body, isFormData);
+const put = <T>(path: string, body?: any) => req<T>('PUT', path, body);
 const patch = <T>(path: string, body?: any) => req<T>('PATCH', path, body);
 const del = <T>(path: string) => req<T>('DELETE', path);
 
@@ -103,6 +104,7 @@ export const adminApi = {
   getActiveWorkers: () => get<any[]>('/admin/workers/active'),
   getWorkerById: (id: string) => get<any>(`/admin/workers/${id}`),
   createWorker: (data: any) => post<any>('/admin/workers', data),
+  updateWorker: (id: string, data: any) => put<any>(`/admin/workers/${id}`, data),
   toggleWorkerStatus: (id: string) => patch<any>(`/admin/workers/${id}/status`),
   deleteWorker: (id: string) => del<any>(`/admin/workers/${id}`),
 

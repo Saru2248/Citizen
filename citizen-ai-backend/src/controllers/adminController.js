@@ -1,5 +1,6 @@
 'use strict';
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const Complaint = require('../models/Complaint');
 const User = require('../models/User');
 const WorkerTask = require('../models/WorkerTask');
@@ -470,14 +471,30 @@ const normalizePhoneNumber = (phone) => {
 // POST /api/admin/workers  (web admin — create worker)
 const createWorker = async (req, res, next) => {
   try {
-    const { name, email, phone, mobileNumber, department, departmentId, workerId } = req.body;
+    const { name, email, phone, mobileNumber, department, departmentId, workerId, password } = req.body;
     const rawPhone = mobileNumber || phone;
-    if (!name) return res.status(400).json({ success: false, message: 'Worker name is required.' });
-    if (!rawPhone) return res.status(400).json({ success: false, message: 'Worker mobile number is required for OTP login.' });
+    if (!name || !name.trim()) return res.status(400).json({ success: false, message: 'Worker name is required.' });
+    if (!rawPhone) return res.status(400).json({ success: false, message: 'Worker mobile number is required.' });
+    if (!password || typeof password !== 'string' || password.length < 8 || !/[a-zA-Z]/.test(password) || !/\d/.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long and contain at least one letter and one number.',
+      });
+    }
 
     const normalizedPhone = normalizePhoneNumber(rawPhone);
-    const assignedWorkerId = workerId || `WRK-${Math.floor(1000 + Math.random() * 9000)}`;
+    const assignedWorkerId = (workerId && workerId.trim()) ? workerId.trim() : `WRK-${Math.floor(1000 + Math.random() * 9000)}`;
     const workerEmail = (email && email.trim()) ? email.trim().toLowerCase() : `${assignedWorkerId.toLowerCase()}@citizenai.local`;
+
+    const existingWorkerId = await User.findOne({
+      $or: [
+        { workerId: assignedWorkerId },
+        { employeeId: assignedWorkerId },
+      ],
+    });
+    if (existingWorkerId) {
+      return res.status(409).json({ success: false, message: 'Worker ID already exists.' });
+    }
 
     const existingPhone = await User.findOne({
       $or: [
@@ -496,12 +513,14 @@ const createWorker = async (req, res, next) => {
       }
     }
 
+    const passwordHash = await bcrypt.hash(password, 12);
+
     const worker = new User({
-      name,
+      name: name.trim(),
       email: workerEmail,
       phone: normalizedPhone,
       mobileNumber: normalizedPhone,
-      passwordHash: 'FIREBASE_AUTH_USER',
+      passwordHash,
       role: 'WORKER',
       department: department || 'Public Works',
       departmentId: departmentId || null,
@@ -512,6 +531,95 @@ const createWorker = async (req, res, next) => {
     });
     await worker.save();
     return res.status(201).json(worker.toPublicJSON());
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PUT / PATCH /api/admin/workers/:id  (web admin — update worker)
+const updateWorker = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, phone, mobileNumber, department, departmentId, workerId, password, accountStatus, isActive } = req.body;
+
+    const worker = await User.findOne({
+      _id: id,
+      role: { $in: ['WORKER', 'FIELD_WORKER'] },
+    });
+
+    if (!worker) {
+      return res.status(404).json({ success: false, message: 'Worker not found.' });
+    }
+
+    if (name && name.trim()) {
+      worker.name = name.trim();
+    }
+
+    if (department !== undefined) {
+      worker.department = department;
+    }
+    if (departmentId !== undefined) {
+      worker.departmentId = departmentId;
+    }
+
+    if (accountStatus) {
+      const validStatuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED'];
+      if (!validStatuses.includes(accountStatus)) {
+        return res.status(400).json({ success: false, message: 'Invalid account status.' });
+      }
+      worker.accountStatus = accountStatus;
+      worker.isActive = accountStatus === 'ACTIVE';
+    } else if (typeof isActive === 'boolean') {
+      worker.isActive = isActive;
+      worker.accountStatus = isActive ? 'ACTIVE' : 'INACTIVE';
+    }
+
+    const rawPhone = mobileNumber || phone;
+    if (rawPhone) {
+      const normalizedPhone = normalizePhoneNumber(rawPhone);
+      if (normalizedPhone !== worker.mobileNumber && normalizedPhone !== worker.phone) {
+        const existingPhone = await User.findOne({
+          _id: { $ne: worker._id },
+          $or: [
+            { mobileNumber: normalizedPhone },
+            { phone: normalizedPhone },
+          ],
+        });
+        if (existingPhone) {
+          return res.status(409).json({ success: false, message: 'Mobile number already registered to another user.' });
+        }
+        worker.mobileNumber = normalizedPhone;
+        worker.phone = normalizedPhone;
+      }
+    }
+
+    if (workerId && workerId.trim() && workerId.trim() !== worker.workerId) {
+      const trimmedWorkerId = workerId.trim();
+      const existingWorkerId = await User.findOne({
+        _id: { $ne: worker._id },
+        $or: [
+          { workerId: trimmedWorkerId },
+          { employeeId: trimmedWorkerId },
+        ],
+      });
+      if (existingWorkerId) {
+        return res.status(409).json({ success: false, message: 'Worker ID already exists.' });
+      }
+      worker.workerId = trimmedWorkerId;
+    }
+
+    if (password) {
+      if (typeof password !== 'string' || password.length < 8 || !/[a-zA-Z]/.test(password) || !/\d/.test(password)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 8 characters long and contain at least one letter and one number.',
+        });
+      }
+      worker.passwordHash = await bcrypt.hash(password, 12);
+    }
+
+    await worker.save();
+    return res.json(worker.toPublicJSON());
   } catch (err) {
     next(err);
   }
@@ -709,7 +817,7 @@ const getAuditLogs = async (req, res, next) => {
 module.exports = {
   getAllComplaints, getComplaintById, assignWorker, updateComplaintStatus,
   updatePriority, updateDepartment, postAdminComment, escalateComplaint,
-  getAllWorkers, getActiveWorkers, getWorkerById, createWorker, toggleWorkerStatus, deleteWorker,
+  getAllWorkers, getActiveWorkers, getWorkerById, createWorker, updateWorker, toggleWorkerStatus, deleteWorker,
   getAdminStats, getWorkerReports, getDepartments, saveDepartment,
   getAllUsers, deleteUser, getAuditLogs,
 };

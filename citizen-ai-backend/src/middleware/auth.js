@@ -37,6 +37,7 @@ const authenticate = async (req, res, next) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       user = await User.findById(decoded.id).select('-passwordHash');
+      req.authMethod = 'jwt';
     } catch (jwtErr) {
       const decoded = jwt.decode(token);
       if (decoded && (decoded.uid || decoded.user_id || decoded.sub || decoded.email || decoded.phone_number)) {
@@ -123,9 +124,9 @@ const requireWorker = (req, res, next) => {
     return res.status(403).json({ success: false, message: 'Access denied: Worker role required.' });
   }
 
-  // Daily OTP Verification enforcement for Worker
+  // Daily OTP Verification enforcement for Worker (applies only to non-JWT sessions)
   if (['WORKER', 'FIELD_WORKER'].includes(req.user.role)) {
-    if (!req.user.lastOtpVerifiedAt || !isCurrentCalendarDay(req.user.lastOtpVerifiedAt)) {
+    if (req.authMethod !== 'jwt' && (!req.user.lastOtpVerifiedAt || !isCurrentCalendarDay(req.user.lastOtpVerifiedAt))) {
       console.warn(`[WORKER AUTH] Daily OTP verification expired for worker: ${req.user.name} (${req.user.workerId})`);
       return res.status(403).json({
         success: false,
