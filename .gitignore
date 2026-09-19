@@ -39,8 +39,10 @@ Thumbs.db
 **/build_log.txt
 
 # Database & Storage
+/data/
 data/
 !worker/app/src/main/java/com/citizenai/worker/data/
+!CitizenAI/app/src/main/java/com/citizenai/app/data/
 **/data/db/
 
 # Logs & Temp
