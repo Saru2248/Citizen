@@ -91,7 +91,7 @@ fun ComplaintDto.toDomain(): Complaint {
     )
 }
 
-fun ComplaintDto.toEntity(): ComplaintEntity {
+fun ComplaintDto.toEntity(localOwnerId: String = ""): ComplaintEntity {
     val effectiveId = id ?: mongoId ?: complaintId ?: "unknown"
     val effectiveComplaintId = complaintId ?: effectiveId
     val reportedInstant = (reportedAt ?: createdAt)?.parseInstant() ?: Instant.now()
@@ -118,7 +118,8 @@ fun ComplaintDto.toEntity(): ComplaintEntity {
         reportedAt         = reportedInstant.toEpochMilli(),
         updatedAt          = updatedInstant.toEpochMilli(),
         resolvedAt         = resolvedAt?.parseInstant()?.toEpochMilli(),
-        workerNotes        = workerNotes
+        workerNotes        = workerNotes,
+        localOwnerId       = localOwnerId
     )
 }
 
@@ -147,7 +148,7 @@ fun ComplaintEntity.toDomain(): Complaint = Complaint(
     workerNotes        = workerNotes
 )
 
-fun Complaint.toEntity(): ComplaintEntity = ComplaintEntity(
+fun Complaint.toEntity(localOwnerId: String = ""): ComplaintEntity = ComplaintEntity(
     id                 = id,
     complaintId        = complaintId,
     citizenId          = citizenId,
@@ -169,7 +170,8 @@ fun Complaint.toEntity(): ComplaintEntity = ComplaintEntity(
     reportedAt         = reportedAt.toEpochMilli(),
     updatedAt          = updatedAt.toEpochMilli(),
     resolvedAt         = resolvedAt?.toEpochMilli(),
-    workerNotes        = workerNotes
+    workerNotes        = workerNotes,
+    localOwnerId       = localOwnerId
 )
 
 fun TimelineEventDto.toDomain(): TimelineEvent = TimelineEvent(

@@ -27,6 +27,7 @@ data class ComplaintEntity(
     val updatedAt: Long,
     val resolvedAt: Long?,
     val workerNotes: String?,
+    val localOwnerId: String = "",
     val cachedAt: Long = System.currentTimeMillis()
 )
 

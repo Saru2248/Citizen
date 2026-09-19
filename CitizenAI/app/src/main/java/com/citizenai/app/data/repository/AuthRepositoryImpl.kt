@@ -33,7 +33,8 @@ private const val TAG = "CitizenAI_Auth"
 class AuthRepositoryImpl @Inject constructor(
     private val dataStore: UserPreferencesDataStore,
     private val firestoreService: FirestoreService,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val complaintDao: com.citizenai.app.data.local.dao.ComplaintDao
 ) : AuthRepository {
 
     override suspend fun login(email: String, password: String): Result<User> {
@@ -236,6 +237,10 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logout() {
+        val currentUserId = firebaseAuth.currentUser?.uid ?: dataStore.getUserId().firstOrNull() ?: ""
+        if (currentUserId.isNotBlank()) {
+            runCatching { complaintDao.deleteByCitizenId(currentUserId) }
+        }
         runCatching { firebaseAuth.signOut() }
         dataStore.clearSession()
     }

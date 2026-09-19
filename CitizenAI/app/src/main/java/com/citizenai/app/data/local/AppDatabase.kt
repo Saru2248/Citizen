@@ -17,7 +17,7 @@ import com.citizenai.app.data.local.entity.NotificationEntity
         ComplaintEntity::class,
         NotificationEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

@@ -25,7 +25,8 @@ data class CitizenHomeUiState(
     val currentLocationAddress: String = "Detecting location...",
     val isFetchingLocation: Boolean = false,
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val isOffline: Boolean = false
 )
 
 @HiltViewModel
@@ -39,6 +40,10 @@ class CitizenHomeViewModel @Inject constructor(
     val uiState: StateFlow<CitizenHomeUiState> = _uiState.asStateFlow()
 
     init {
+        loadData()
+    }
+
+    fun retry() {
         loadData()
     }
 
@@ -66,13 +71,14 @@ class CitizenHomeViewModel @Inject constructor(
                             )
                         },
                         recentComplaints = complaints.take(5),
-                        isLoading = false
+                        isLoading = false,
+                        error = null
                     )
                 },
                 onFailure = { err ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = err.message,
+                        error = err.message ?: "Failed to connect to server",
                         userName = name
                     )
                 }

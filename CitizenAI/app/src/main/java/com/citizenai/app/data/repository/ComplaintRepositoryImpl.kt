@@ -37,38 +37,69 @@ class ComplaintRepositoryImpl @Inject constructor(
 ) : ComplaintRepository {
 
     override suspend fun getMyComplaints(): Result<List<Complaint>> {
+        val currentUserId = firebaseAuth.currentUser?.uid ?: ""
+        val apiUrl = "${com.citizenai.app.BuildConfig.API_BASE_URL}complaints/my"
+
         return try {
             val apiRes = apiService.getMyComplaints()
+            val code = apiRes.code()
             if (apiRes.isSuccessful && apiRes.body() != null) {
                 val dtos = apiRes.body()!!
                 val domainComplaints = dtos.map { it.toDomain() }
-                complaintDao.insertAll(domainComplaints.map { it.toEntity() })
+                if (currentUserId.isNotBlank()) {
+                    val entities = domainComplaints.map { it.toEntity(localOwnerId = currentUserId) }
+                    complaintDao.insertAll(entities)
+                }
                 Result.success(domainComplaints)
+            } else if (code == 401 || code == 403) {
+                Log.w("ComplaintRepo", "Authentication failure (HTTP $code) on $apiUrl")
+                Result.failure(Exception("Session expired or unauthorized (HTTP $code). Please sign in again."))
             } else {
-                val currentUserId = firebaseAuth.currentUser?.uid ?: ""
-                val cached = complaintDao.getByCitizenId(currentUserId)
-                Result.success(cached.map { it.toDomain() })
+                val errorBody = runCatching { apiRes.errorBody()?.string() }.getOrNull() ?: apiRes.message()
+                Log.w("ComplaintRepo", "Server error (HTTP $code) on $apiUrl: $errorBody")
+                val cached = if (currentUserId.isNotBlank()) complaintDao.getByCitizenId(currentUserId) else emptyList()
+                if (cached.isNotEmpty()) {
+                    Log.i("ComplaintRepo", "Serving ${cached.size} cached complaints after HTTP $code")
+                    Result.success(cached.map { it.toDomain() })
+                } else {
+                    Result.failure(Exception("Server returned HTTP $code: $errorBody"))
+                }
             }
         } catch (e: Exception) {
-            val currentUserId = firebaseAuth.currentUser?.uid ?: ""
-            val cached = complaintDao.getByCitizenId(currentUserId)
-            Result.success(cached.map { it.toDomain() })
+            Log.e("ComplaintRepo", "Network exception accessing $apiUrl: ${e.javaClass.simpleName} - ${e.message}")
+            val cached = if (currentUserId.isNotBlank()) complaintDao.getByCitizenId(currentUserId) else emptyList()
+            if (cached.isNotEmpty()) {
+                Log.i("ComplaintRepo", "Serving ${cached.size} cached complaints after network failure")
+                Result.success(cached.map { it.toDomain() })
+            } else {
+                val errorMsg = when {
+                    e is java.net.ConnectException || e.message?.contains("Failed to connect") == true ->
+                        "Cannot connect to server at $apiUrl. Please verify backend is running and network is connected."
+                    e is java.net.SocketTimeoutException ->
+                        "Connection timed out waiting for server ($apiUrl)."
+                    e is java.net.UnknownHostException ->
+                        "Could not resolve server host ($apiUrl)."
+                    else -> e.message ?: "Network error: ${e.javaClass.simpleName}"
+                }
+                Result.failure(Exception(errorMsg, e))
+            }
         }
     }
 
     override suspend fun getComplaintById(id: String): Result<Complaint> {
+        val currentUserId = firebaseAuth.currentUser?.uid ?: ""
         return try {
             val apiRes = apiService.getComplaintById(id)
             if (apiRes.isSuccessful && apiRes.body() != null) {
                 val complaint = apiRes.body()!!.toDomain()
-                complaintDao.insert(complaint.toEntity())
+                complaintDao.insert(complaint.toEntity(localOwnerId = currentUserId))
                 Result.success(complaint)
             } else {
                 val cached = complaintDao.getById(id)
                 if (cached != null) {
                     Result.success(cached.toDomain())
                 } else {
-                    Result.failure(Exception("Complaint not found"))
+                    Result.failure(Exception("Complaint not found (HTTP ${apiRes.code()})"))
                 }
             }
         } catch (e: Exception) {
@@ -174,7 +205,8 @@ class ComplaintRepositoryImpl @Inject constructor(
                 val complaintDto = apiRes.body()!!
                 Log.d("CitizenAI_Submit", "[COMPLAINT SUBMISSION] Response body: $complaintDto")
                 val domainComplaint = complaintDto.toDomain()
-                complaintDao.insert(complaintDto.toEntity())
+                val currentUserId = firebaseAuth.currentUser?.uid ?: ""
+                complaintDao.insert(complaintDto.toEntity(localOwnerId = currentUserId))
                 Log.d("CitizenAI_Submit", "[COMPLAINT SUBMISSION] Backend returned HTTP $code, ComplaintID=${domainComplaint.complaintId}")
                 Result.success(domainComplaint)
             } else {
@@ -186,7 +218,7 @@ class ComplaintRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             val userFriendlyMsg = when {
                 e is java.net.ConnectException || e.message?.contains("Failed to connect") == true ->
-                    "Cannot connect to server at $apiUrl. Please ensure the backend is running on port 8000 and 'adb reverse tcp:8000 tcp:8000' is executed."
+                    "Cannot connect to server at $apiUrl. Please verify backend is running and reachable on this network."
                 e is java.net.SocketTimeoutException ->
                     "Connection timed out waiting for server ($apiUrl). Please check backend status."
                 else -> e.message ?: "Submission error: ${e.javaClass.simpleName}"

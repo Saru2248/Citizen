@@ -25,6 +25,16 @@ val devPort = localProperties.getProperty("CITIZEN_AI_DEV_PORT") ?: "8000"
 val stagingApiUrl = localProperties.getProperty("CITIZEN_AI_STAGING_API_URL") ?: "https://staging-api.citizenai.org/api/"
 val prodApiUrl = localProperties.getProperty("CITIZEN_AI_PROD_API_URL") ?: "https://api.citizenai.org/api/"
 
+fun normalizeApiBaseUrl(url: String): String {
+    val clean = url.trim().trimEnd('/')
+    return if (clean.endsWith("/api")) "$clean/" else "$clean/api/"
+}
+
+fun extractOriginUrl(url: String): String {
+    val clean = url.trim().trimEnd('/')
+    return if (clean.endsWith("/api")) clean.removeSuffix("/api").trimEnd('/') else clean
+}
+
 android {
     namespace = "com.citizenai.app"
     compileSdk = 35
@@ -39,6 +49,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:$devPort/api/\"")
+        buildConfigField("String", "SOCKET_URL", "\"http://127.0.0.1:$devPort\"")
         buildConfigField("String", "API_ENVIRONMENT", "\"LOCAL_DEBUG_USB\"")
         buildConfigField("String", "MAPS_API_KEY", "\"\"")
 
@@ -51,24 +62,32 @@ android {
         create("localUsb") {
             dimension = "environment"
             buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:$devPort/api/\"")
+            buildConfigField("String", "SOCKET_URL", "\"http://127.0.0.1:$devPort\"")
             buildConfigField("String", "API_ENVIRONMENT", "\"LOCAL_DEBUG_USB\"")
         }
 
         create("localLan") {
             dimension = "environment"
             buildConfigField("String", "API_BASE_URL", "\"http://$devLanHost:$devPort/api/\"")
+            buildConfigField("String", "SOCKET_URL", "\"http://$devLanHost:$devPort\"")
             buildConfigField("String", "API_ENVIRONMENT", "\"LOCAL_DEBUG_LAN\"")
         }
 
         create("staging") {
             dimension = "environment"
-            buildConfigField("String", "API_BASE_URL", "\"$stagingApiUrl\"")
+            val base = normalizeApiBaseUrl(stagingApiUrl)
+            val socket = extractOriginUrl(stagingApiUrl)
+            buildConfigField("String", "API_BASE_URL", "\"$base\"")
+            buildConfigField("String", "SOCKET_URL", "\"$socket\"")
             buildConfigField("String", "API_ENVIRONMENT", "\"STAGING\"")
         }
 
         create("production") {
             dimension = "environment"
-            buildConfigField("String", "API_BASE_URL", "\"$prodApiUrl\"")
+            val base = normalizeApiBaseUrl(prodApiUrl)
+            val socket = extractOriginUrl(prodApiUrl)
+            buildConfigField("String", "API_BASE_URL", "\"$base\"")
+            buildConfigField("String", "SOCKET_URL", "\"$socket\"")
             buildConfigField("String", "API_ENVIRONMENT", "\"PRODUCTION\"")
         }
     }

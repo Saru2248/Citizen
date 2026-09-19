@@ -31,13 +31,13 @@ class ComplaintsListViewModel @Inject constructor(
 
     fun load() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             getMyComplaintsUseCase().fold(
                 onSuccess = { complaints ->
-                    _uiState.value = _uiState.value.copy(allComplaints = complaints, isLoading = false)
+                    _uiState.value = _uiState.value.copy(allComplaints = complaints, isLoading = false, error = null)
                 },
                 onFailure = { err ->
-                    _uiState.value = _uiState.value.copy(isLoading = false, error = err.message)
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = err.message ?: "Failed to load reports")
                 }
             )
         }

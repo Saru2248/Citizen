@@ -272,7 +272,56 @@ fun CitizenHomeScreen(
             repeat(3) {
                 ShimmerComplaintCard()
             }
+        } else if (uiState.error != null && uiState.recentComplaints.isEmpty()) {
+            // Network or Server Error State with Retry
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        Icons.Default.CloudOff,
+                        contentDescription = "Connection Error",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = "Unable to connect to server",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = uiState.error ?: "Network error. Please verify your connection or backend status.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.retry() },
+                        colors = ButtonDefaults.buttonColors(containerColor = CivicGreen),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Retry Connection")
+                    }
+                }
+            }
         } else if (uiState.recentComplaints.isEmpty()) {
+            // Confirmed successful empty state
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -296,12 +345,53 @@ fun CitizenHomeScreen(
                 }
             }
         } else {
+            if (uiState.error != null) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 6.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(containerColor = CivicBlueMedium.copy(alpha = 0.1f)),
+                    border = BorderStroke(1.dp, CivicBlueMedium.copy(alpha = 0.3f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.CloudOff, contentDescription = null, tint = CivicBlueMedium, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Offline: Displaying cached reports",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextPrimary,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TextButton(onClick = { viewModel.retry() }) {
+                            Text("Retry", color = CivicGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
             uiState.recentComplaints.forEach { complaint ->
                 ComplaintCard(
                     complaint = complaint,
                     onClick = { onNavigateToComplaintDetail(complaint.id) }
                 )
             }
+        }
+
+        if (com.citizenai.app.BuildConfig.DEBUG) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = "Env: ${com.citizenai.app.BuildConfig.API_ENVIRONMENT} • ${com.citizenai.app.BuildConfig.API_BASE_URL}",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = TextTertiary,
+                    fontSize = 10.sp
+                ),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+            )
         }
 
         Spacer(Modifier.height(16.dp))

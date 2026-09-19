@@ -12,13 +12,19 @@ interface ComplaintDao {
     @Query("SELECT * FROM complaints ORDER BY reportedAt DESC")
     suspend fun getAll(): List<ComplaintEntity>
 
-    @Query("SELECT * FROM complaints WHERE citizenId = :citizenId ORDER BY reportedAt DESC")
+    @Query("SELECT * FROM complaints WHERE (localOwnerId = :citizenId OR citizenId = :citizenId OR (:fallbackId != '' AND (localOwnerId = :fallbackId OR citizenId = :fallbackId))) ORDER BY reportedAt DESC")
+    fun observeByCitizenId(citizenId: String, fallbackId: String): Flow<List<ComplaintEntity>>
+
+    @Query("SELECT * FROM complaints WHERE (localOwnerId = :citizenId OR citizenId = :citizenId) ORDER BY reportedAt DESC")
     fun observeByCitizenId(citizenId: String): Flow<List<ComplaintEntity>>
 
-    @Query("SELECT * FROM complaints WHERE citizenId = :citizenId ORDER BY reportedAt DESC")
+    @Query("SELECT * FROM complaints WHERE (localOwnerId = :citizenId OR citizenId = :citizenId OR (:fallbackId != '' AND (localOwnerId = :fallbackId OR citizenId = :fallbackId))) ORDER BY reportedAt DESC")
+    suspend fun getByCitizenId(citizenId: String, fallbackId: String): List<ComplaintEntity>
+
+    @Query("SELECT * FROM complaints WHERE (localOwnerId = :citizenId OR citizenId = :citizenId) ORDER BY reportedAt DESC")
     suspend fun getByCitizenId(citizenId: String): List<ComplaintEntity>
 
-    @Query("SELECT * FROM complaints WHERE id = :id")
+    @Query("SELECT * FROM complaints WHERE id = :id OR complaintId = :id")
     suspend fun getById(id: String): ComplaintEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -27,8 +33,11 @@ interface ComplaintDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(complaint: ComplaintEntity)
 
-    @Query("DELETE FROM complaints WHERE id = :id")
+    @Query("DELETE FROM complaints WHERE id = :id OR complaintId = :id")
     suspend fun deleteById(id: String)
+
+    @Query("DELETE FROM complaints WHERE localOwnerId = :citizenId OR citizenId = :citizenId")
+    suspend fun deleteByCitizenId(citizenId: String)
 
     @Query("DELETE FROM complaints")
     suspend fun deleteAll()

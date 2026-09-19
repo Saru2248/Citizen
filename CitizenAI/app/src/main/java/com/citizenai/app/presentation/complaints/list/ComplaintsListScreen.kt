@@ -80,6 +80,22 @@ fun ComplaintsListScreen(
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = CivicGreen)
                 }
+            } else if (uiState.error != null && uiState.allComplaints.isEmpty()) {
+                Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.CloudOff, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(64.dp))
+                        Spacer(Modifier.height(12.dp))
+                        Text("Connection Error", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                        Spacer(Modifier.height(6.dp))
+                        Text(uiState.error ?: "Unable to connect to server.", style = MaterialTheme.typography.bodySmall, color = TextSecondary, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        Spacer(Modifier.height(16.dp))
+                        Button(onClick = { viewModel.load() }, colors = ButtonDefaults.buttonColors(containerColor = CivicGreen)) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Retry")
+                        }
+                    }
+                }
             } else {
                 val filtered = viewModel.getFilteredComplaints(uiState.selectedTab)
                 if (filtered.isEmpty()) {
