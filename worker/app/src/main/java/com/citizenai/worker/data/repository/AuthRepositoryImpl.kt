@@ -222,7 +222,24 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login(emailOrEmployeeId: String, password: String): Result<WorkerUser> {
         return try {
             val identifier = emailOrEmployeeId.trim()
-            Log.i(TAG, "[WORKER AUTH] Attempting login for identifier: $identifier")
+            Log.i(TAG, "[WORKER AUTH] Attempting login for identifier: $identifier (Env: ${BuildConfig.API_ENVIRONMENT}, Base: ${BuildConfig.API_BASE_URL})")
+
+            // Pre-flight backend connectivity and health probe
+            try {
+                val healthResponse = apiService.checkHealth()
+                if (!healthResponse.isSuccessful) {
+                    if (healthResponse.code() == 503) {
+                        return Result.failure(Exception("Backend service is unavailable: Database is not connected (HTTP 503)."))
+                    } else if (healthResponse.code() == 404) {
+                        Log.w(TAG, "[WORKER AUTH] Health endpoint returned 404, proceeding to auth endpoint")
+                    }
+                }
+            } catch (e: Exception) {
+                val diagnosticError = resolveNetworkException(e)
+                Log.e(TAG, "[WORKER AUTH] Backend connectivity check failed: $diagnosticError", e)
+                return Result.failure(Exception(diagnosticError))
+            }
+
             val response = apiService.workerLogin(WorkerLoginRequestDto(identifier, password))
             if (response.isSuccessful && response.body() != null) {
                 val res = response.body()!!
@@ -277,24 +294,54 @@ class AuthRepositoryImpl @Inject constructor(
                 val finalError = parsedMessage ?: when (response.code()) {
                     401 -> "Invalid Worker ID/Mobile Number or Password"
                     403 -> "Your worker account is inactive. Contact your administrator."
-                    404 -> "Authentication service endpoint not found (404)."
-                    500, 502, 503 -> "Server error. Please try again later."
+                    404 -> "Authentication endpoint not found (HTTP 404). Check backend API routing."
+                    500 -> "Internal server error (HTTP 500). Please try again later."
+                    502, 503, 504 -> "Backend service temporarily unavailable (HTTP ${response.code()})."
                     else -> "Login failed (HTTP ${response.code()}). Please try again."
                 }
                 Log.e(TAG, "[WORKER AUTH] Worker rejected: HTTP ${response.code()} Error: $finalError")
                 Result.failure(Exception(finalError))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "[WORKER AUTH] Worker network exception: ${e.javaClass.simpleName} - ${e.message}", e)
-            val msg = when (e) {
-                is java.net.ConnectException -> "Unable to connect to server. Please verify the backend is running and reachable."
-                is java.net.SocketTimeoutException -> "Connection timed out waiting for the server. Please check backend status."
-                is java.net.UnknownHostException -> "Server host not found. Please check your network connection."
-                is org.json.JSONException -> "Invalid response format from server."
-                is java.io.IOException -> "Network error (${e.javaClass.simpleName}). Please check your connection."
-                else -> e.message ?: "Authentication failed"
+            val diagError = resolveNetworkException(e)
+            Log.e(TAG, "[WORKER AUTH] Worker network exception: ${e.javaClass.simpleName} - $diagError", e)
+            Result.failure(Exception(diagError))
+        }
+    }
+
+    private fun resolveNetworkException(e: Throwable): String {
+        return when (BuildConfig.API_ENVIRONMENT) {
+            "LOCAL_DEBUG_USB" -> when (e) {
+                is java.net.ConnectException ->
+                    "Unable to connect to backend on 127.0.0.1:8000. Ensure the Node backend is running and 'adb reverse tcp:8000 tcp:8000' is executed."
+                is java.net.SocketTimeoutException ->
+                    "Connection timed out waiting for 127.0.0.1:8000. Check backend responsiveness and ADB reverse tunnel."
+                is java.net.UnknownHostException ->
+                    "Cannot resolve 127.0.0.1. Please verify USB connection."
+                is java.io.IOException ->
+                    "USB network error (${e.javaClass.simpleName}). Please check ADB reverse connection."
+                else -> e.message ?: "Network error occurred."
             }
-            Result.failure(Exception(msg))
+            "LOCAL_DEBUG_LAN" -> when (e) {
+                is java.net.ConnectException, is java.net.UnknownHostException ->
+                    "LAN host unreachable (${BuildConfig.API_BASE_URL}). Ensure phone and computer are on the same Wi-Fi network and check CITIZEN_AI_DEV_LAN_HOST."
+                is java.net.SocketTimeoutException ->
+                    "Connection timed out connecting to LAN host (${BuildConfig.API_BASE_URL}). Check Wi-Fi connection and firewall rules."
+                is java.io.IOException ->
+                    "LAN network error (${e.javaClass.simpleName}). Please check your local network connection."
+                else -> e.message ?: "Network error occurred."
+            }
+            else -> when (e) {
+                is java.net.ConnectException ->
+                    "Unable to connect to server. Please check your internet connection."
+                is java.net.SocketTimeoutException ->
+                    "Server connection timed out. Please check your network connection and try again."
+                is java.net.UnknownHostException ->
+                    "Server host not found. Please check your internet connection."
+                is java.io.IOException ->
+                    "Network error (${e.javaClass.simpleName}). Please check your connection."
+                else -> e.message ?: "Authentication failed."
+            }
         }
     }
 

@@ -8,6 +8,9 @@ import retrofit2.http.*
 
 interface WorkerApiService {
 
+    @GET("health")
+    suspend fun checkHealth(): Response<Map<String, Any>>
+
     @POST("worker/auth/validate")
     suspend fun validateWorker(
         @Body request: ValidateWorkerRequestDto

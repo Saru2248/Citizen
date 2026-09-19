@@ -88,7 +88,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         val baseUrl = BuildConfig.API_BASE_URL
-        Log.i(TAG, "[Worker Network] Initializing Retrofit with API Base URL: $baseUrl")
+        Log.i(TAG, "[Worker Network] Initializing Retrofit for environment '${BuildConfig.API_ENVIRONMENT}' with API Base URL: $baseUrl")
         return Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(okHttpClient)

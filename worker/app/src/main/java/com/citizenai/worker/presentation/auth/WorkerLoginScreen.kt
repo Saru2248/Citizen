@@ -292,6 +292,19 @@ fun WorkerLoginScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (com.citizenai.worker.BuildConfig.DEBUG) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = "Env: ${com.citizenai.worker.BuildConfig.API_ENVIRONMENT} • ${com.citizenai.worker.BuildConfig.API_BASE_URL}",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = TextTertiary,
+                            fontSize = 10.sp
+                        ),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }

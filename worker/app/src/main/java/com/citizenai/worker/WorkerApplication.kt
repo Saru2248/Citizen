@@ -18,5 +18,8 @@ class WorkerApplication : Application() {
                 .build()
             FirebaseApp.initializeApp(this, options)
         }
+        android.util.Log.i("WorkerApplication", "[Worker App] Startup environment: ${BuildConfig.API_ENVIRONMENT}")
+        android.util.Log.i("WorkerApplication", "[Worker App] Target API Base URL: ${BuildConfig.API_BASE_URL}")
+        android.util.Log.i("WorkerApplication", "[Worker App] Target Socket URL: ${BuildConfig.SOCKET_URL}")
     }
 }
