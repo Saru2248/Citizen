@@ -14,11 +14,30 @@ const {
   startTask,
   submitProgress,
   completeTask,
+  uploadAfterPhoto,
   getTaskReport,
   validateWorkerCredentials,
   verifyWorkerOtp,
   workerLogin,
 } = require('../controllers/workerController');
+
+// Helper middleware: support afterImage, image, photo, or evidence multipart fields
+const uploadAfterImageFlexible = (req, res, next) => {
+  upload.fields([
+    { name: 'afterImage', maxCount: 1 },
+    { name: 'image', maxCount: 1 },
+    { name: 'photo', maxCount: 1 },
+    { name: 'evidence', maxCount: 1 },
+  ])(req, res, (err) => {
+    if (err) {
+      console.warn('[WORKER UPLOAD] Notice:', err.message);
+    }
+    if (req.files) {
+      req.file = req.files['afterImage']?.[0] || req.files['image']?.[0] || req.files['photo']?.[0] || req.files['evidence']?.[0] || null;
+    }
+    next();
+  });
+};
 
 // Worker Auth (Credentials & legacy OTP)
 router.post('/auth/login', workerLogin);
@@ -52,10 +71,14 @@ router.patch('/tasks/:id', authenticate, requireWorker, startTask);
 router.post('/tasks/:id/progress', authenticate, requireWorker, upload.single('photo'), submitProgress);
 router.put('/tasks/:id/progress', authenticate, requireWorker, upload.single('photo'), submitProgress);
 
+// After Photo Evidence Actions
+router.post('/tasks/:id/evidence/after', authenticate, requireWorker, uploadAfterImageFlexible, uploadAfterPhoto);
+router.post('/tasks/:id/after-photo', authenticate, requireWorker, uploadAfterImageFlexible, uploadAfterPhoto);
+
 // Task Complete Actions (Support POST and PUT with afterImage upload)
-router.post('/tasks/:id/complete', authenticate, requireWorker, upload.single('afterImage'), completeTask);
-router.put('/tasks/:id/complete', authenticate, requireWorker, upload.single('afterImage'), completeTask);
-router.post('/tasks/:id/proof', authenticate, requireWorker, upload.single('afterImage'), completeTask);
-router.put('/tasks/:id/proof', authenticate, requireWorker, upload.single('afterImage'), completeTask);
+router.post('/tasks/:id/complete', authenticate, requireWorker, uploadAfterImageFlexible, completeTask);
+router.put('/tasks/:id/complete', authenticate, requireWorker, uploadAfterImageFlexible, completeTask);
+router.post('/tasks/:id/proof', authenticate, requireWorker, uploadAfterImageFlexible, completeTask);
+router.put('/tasks/:id/proof', authenticate, requireWorker, uploadAfterImageFlexible, completeTask);
 
 module.exports = router;

@@ -67,6 +67,23 @@ export interface StatusHistoryEntry {
   updatedBy?: string;
 }
 
+export interface EvidenceItem {
+  storageProvider?: string;
+  storagePath?: string;
+  publicUrl: string;
+  uploadedBy?: string;
+  uploadedByRole?: 'CITIZEN' | 'WORKER' | 'ADMIN';
+  uploadedAt?: string | number;
+  mimeType?: string;
+  fileSize?: number;
+  originalFileName?: string;
+}
+
+export interface ComplaintEvidence {
+  before?: EvidenceItem | null;
+  after?: EvidenceItem | null;
+}
+
 export interface Complaint {
   id: string;
   complaintId: string; // e.g. CIV-1024
@@ -78,6 +95,7 @@ export interface Complaint {
   imageUrl?: string; // Before photo
   afterImageUrl?: string; // After photo
   completionPhotoUrl?: string;
+  evidence?: ComplaintEvidence;
   latitude: number;
   longitude: number;
   address: string;

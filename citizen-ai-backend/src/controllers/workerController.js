@@ -23,7 +23,7 @@ const normalizePhoneNumber = (phone) => {
 
 const getImageUrl = (req, filename) => {
   if (!filename) return null;
-  return `${req.protocol}://${req.get('host')}/uploads/${path.basename(filename)}`;
+  return `/uploads/${path.basename(filename)}`;
 };
 
 // Helper: Resolve assigned complaint for authenticated worker by Complaint._id, complaintId, or WorkerTask._id
@@ -300,16 +300,45 @@ const completeTask = async (req, res, next) => {
     }
 
     const notes = req.body.notes || req.body.completionNotes || req.body.note || 'Worker completed assigned work.';
-    const afterImageUrl = req.file ? getImageUrl(req, req.file.filename) : (req.body.afterPhotoUrl || null);
+    const afterImageUrl = req.file ? `/uploads/${path.basename(req.file.filename)}` : (req.body.afterPhotoUrl || complaint.afterImageUrl || complaint.completionPhotoUrl || null);
+
+    if (!afterImageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mandatory completion proof: An After Photo is required before marking this task as completed.'
+      });
+    }
+
+    const evidenceAfter = req.file ? {
+      storageProvider: 'LOCAL',
+      storagePath: req.file.path,
+      publicUrl: afterImageUrl,
+      uploadedBy: req.user._id,
+      uploadedByRole: 'WORKER',
+      uploadedAt: new Date(),
+      mimeType: req.file.mimetype,
+      fileSize: req.file.size,
+      originalFileName: req.file.originalname,
+    } : (complaint.evidence?.after || {
+      storageProvider: 'LOCAL',
+      storagePath: null,
+      publicUrl: afterImageUrl,
+      uploadedBy: req.user._id,
+      uploadedByRole: 'WORKER',
+      uploadedAt: new Date(),
+      mimeType: null,
+      fileSize: null,
+      originalFileName: null,
+    });
 
     complaint.status = 'COMPLETED';
     complaint.progressPercentage = 100;
     complaint.resolvedAt = new Date();
     complaint.workerNotes = notes;
-    if (afterImageUrl) {
-      complaint.afterImageUrl = afterImageUrl;
-      complaint.completionPhotoUrl = afterImageUrl;
-    }
+    complaint.afterImageUrl = afterImageUrl;
+    complaint.completionPhotoUrl = afterImageUrl;
+    complaint.evidence = complaint.evidence || {};
+    complaint.evidence.after = evidenceAfter;
 
     complaint.statusHistory.push({
       status: 'COMPLETED',
@@ -331,11 +360,71 @@ const completeTask = async (req, res, next) => {
     await User.findByIdAndUpdate(req.user._id, { $inc: { tasksCompleted: 1 } });
 
     const dto = complaint.toDTO();
+    emitRealtimeEvent('complaint:evidence-updated', {
+      complaintId: complaint.complaintId || complaint._id.toString(),
+      evidenceType: 'AFTER',
+      evidence: dto.evidence,
+      updatedAt: complaint.updatedAt,
+      complaint: dto,
+    });
     emitRealtimeEvent('task_completed', dto);
     emitRealtimeEvent('complaint_updated', dto);
     console.log(`[WORKER STATUS] Updated: Task ${complaint.complaintId || complaint._id} status changed to COMPLETED`);
 
     return res.status(200).json({ success: true, message: 'Task completed successfully', data: dto.data || dto });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/worker/tasks/:id/evidence/after
+const uploadAfterPhoto = async (req, res, next) => {
+  try {
+    const complaint = await findComplaintForWorker(req.params.id, req.user._id);
+    if (!complaint) {
+      return res.status(404).json({ success: false, message: 'Task not found or unauthorized.' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'After Photo image file is required.' });
+    }
+
+    const publicUrl = `/uploads/${path.basename(req.file.filename)}`;
+    const evidenceData = {
+      storageProvider: 'LOCAL',
+      storagePath: req.file.path,
+      publicUrl,
+      uploadedBy: req.user._id,
+      uploadedByRole: 'WORKER',
+      uploadedAt: new Date(),
+      mimeType: req.file.mimetype,
+      fileSize: req.file.size,
+      originalFileName: req.file.originalname,
+    };
+
+    complaint.afterImageUrl = publicUrl;
+    complaint.completionPhotoUrl = publicUrl;
+    complaint.evidence = complaint.evidence || {};
+    complaint.evidence.after = evidenceData;
+    complaint.updatedAt = new Date();
+    await complaint.save();
+
+    const dto = complaint.toDTO();
+    emitRealtimeEvent('complaint:evidence-updated', {
+      complaintId: complaint.complaintId || complaint._id.toString(),
+      evidenceType: 'AFTER',
+      evidence: dto.evidence,
+      updatedAt: complaint.updatedAt,
+      complaint: dto,
+    });
+    emitRealtimeEvent('complaint_updated', dto);
+
+    return res.status(200).json({
+      success: true,
+      message: 'After Photo completion evidence uploaded successfully.',
+      data: evidenceData,
+      complaint: dto,
+    });
   } catch (err) {
     next(err);
   }
@@ -352,6 +441,36 @@ const getTaskReport = async (req, res, next) => {
     const reports = await WorkerReport.find({ complaintId: complaint._id }).sort({ createdAt: 1 });
     const dto = complaint.toDTO();
 
+    // BEFORE PHOTO FALLBACK ORDER:
+    // 1. dto.imageUrl
+    // 2. complaint.evidence?.before?.publicUrl
+    // 3. complaint.imageUrl
+    // 4. reports[0]?.beforePhotoUrl
+    const beforePhotoUrl = dto.imageUrl ||
+      complaint.evidence?.before?.publicUrl ||
+      complaint.imageUrl ||
+      (reports.length > 0 ? reports[0].beforePhotoUrl : null) ||
+      null;
+
+    // AFTER PHOTO FALLBACK ORDER:
+    // 1. dto.afterImageUrl
+    // 2. complaint.evidence?.after?.publicUrl
+    // 3. complaint.afterImageUrl
+    // 4. complaint.completionPhotoUrl
+    // 5. reports[last]?.afterPhotoUrl
+    const afterPhotoUrl = dto.afterImageUrl ||
+      complaint.evidence?.after?.publicUrl ||
+      complaint.afterImageUrl ||
+      complaint.completionPhotoUrl ||
+      (reports.length > 0 ? reports[reports.length - 1].afterPhotoUrl : null) ||
+      null;
+
+    const beforeUploadedAt = complaint.evidence?.before?.uploadedAt || complaint.createdAt || null;
+    const beforeUploadedByRole = complaint.evidence?.before?.uploadedByRole || 'CITIZEN';
+
+    const afterUploadedAt = complaint.evidence?.after?.uploadedAt || complaint.resolvedAt || (reports.length > 0 ? reports[reports.length - 1].createdAt : null) || null;
+    const afterUploadedByRole = complaint.evidence?.after?.uploadedByRole || 'WORKER';
+
     const reportData = {
       complaintId: complaint.complaintId,
       issueCategory: complaint.category,
@@ -366,8 +485,26 @@ const getTaskReport = async (req, res, next) => {
       reportedDate: complaint.createdAt,
       startedAt: complaint.statusHistory.find(h => h.status === 'WORK_STARTED')?.timestamp || null,
       completionDate: complaint.resolvedAt,
-      beforePhotoUrl: complaint.imageUrl,
-      afterPhotoUrl: complaint.afterImageUrl || complaint.completionPhotoUrl,
+      beforePhotoUrl,
+      afterPhotoUrl,
+      beforeUploadedAt,
+      afterUploadedAt,
+      beforeUploadedByRole,
+      afterUploadedByRole,
+      evidence: {
+        before: beforePhotoUrl ? {
+          url: beforePhotoUrl,
+          publicUrl: beforePhotoUrl,
+          uploadedAt: beforeUploadedAt,
+          uploadedByRole: beforeUploadedByRole,
+        } : null,
+        after: afterPhotoUrl ? {
+          url: afterPhotoUrl,
+          publicUrl: afterPhotoUrl,
+          uploadedAt: afterUploadedAt,
+          uploadedByRole: afterUploadedByRole,
+        } : null,
+      },
       progressHistory: reports.map(r => r.toDTO()),
       workerNotes: complaint.workerNotes,
       statusHistory: complaint.statusHistory,
@@ -808,6 +945,7 @@ module.exports = {
   startTask,
   submitProgress,
   completeTask,
+  uploadAfterPhoto,
   getTaskReport,
   validateWorkerCredentials,
   verifyWorkerOtp,

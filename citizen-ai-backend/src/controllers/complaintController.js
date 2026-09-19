@@ -9,7 +9,7 @@ const path = require('path');
 
 const getImageUrl = (req, filename) => {
   if (!filename) return null;
-  return `${req.protocol}://${req.get('host')}/uploads/${path.basename(filename)}`;
+  return `/uploads/${path.basename(filename)}`;
 };
 
 // POST /api/complaints
@@ -35,7 +35,18 @@ const submitComplaint = async (req, res, next) => {
 
     stage = 'IMAGE_PROCESSING';
     console.log('[COMPLAINT API] Image processing started');
-    const imageUrl = req.file ? getImageUrl(req, req.file.filename) : null;
+    const imageUrl = req.file ? `/uploads/${path.basename(req.file.filename)}` : null;
+    const evidenceBefore = req.file ? {
+      storageProvider: 'LOCAL',
+      storagePath: req.file.path,
+      publicUrl: imageUrl,
+      uploadedBy: req.user._id,
+      uploadedByRole: 'CITIZEN',
+      uploadedAt: new Date(),
+      mimeType: req.file.mimetype,
+      fileSize: req.file.size,
+      originalFileName: req.file.originalname,
+    } : null;
     console.log('[COMPLAINT API] Image processing completed');
 
     // Deduplication check (Phase 14)
@@ -61,6 +72,10 @@ const submitComplaint = async (req, res, next) => {
       category: (category || '').toUpperCase(),
       description,
       imageUrl,
+      evidence: {
+        before: evidenceBefore,
+        after: null,
+      },
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
       address,
@@ -286,4 +301,126 @@ const getProgressUpdates = async (req, res, next) => {
   }
 };
 
-module.exports = { submitComplaint, getMyComplaints, getComplaintsForMap, getComplaintById, getTimeline, getComments, postComment, verifyResolution, getProgressUpdates };
+// POST /api/complaints/:id/evidence/before
+const uploadBeforePhoto = async (req, res, next) => {
+  try {
+    const idParam = req.params.id;
+    const query = mongoose.isValidObjectId(idParam) ? { _id: idParam } : { complaintId: idParam };
+    const complaint = await Complaint.findOne(query);
+
+    if (!complaint) {
+      return res.status(404).json({ success: false, message: 'Complaint not found.' });
+    }
+
+    // Citizen authorization check: Must be the creator of the complaint (or admin)
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(req.user?.role);
+    const isOwner = complaint.citizenId && complaint.citizenId.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: You can only upload evidence for your own complaint.',
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Image file is required.' });
+    }
+
+    const publicUrl = `/uploads/${path.basename(req.file.filename)}`;
+    const evidenceData = {
+      storageProvider: 'LOCAL',
+      storagePath: req.file.path,
+      publicUrl,
+      uploadedBy: req.user._id,
+      uploadedByRole: isAdmin ? 'ADMIN' : 'CITIZEN',
+      uploadedAt: new Date(),
+      mimeType: req.file.mimetype,
+      fileSize: req.file.size,
+      originalFileName: req.file.originalname,
+    };
+
+    complaint.imageUrl = publicUrl;
+    complaint.evidence = complaint.evidence || {};
+    complaint.evidence.before = evidenceData;
+    complaint.updatedAt = new Date();
+    await complaint.save();
+
+    const dto = complaint.toDTO();
+    emitRealtimeEvent('complaint:evidence-updated', {
+      complaintId: complaint.complaintId || complaint._id.toString(),
+      evidenceType: 'BEFORE',
+      evidence: dto.evidence,
+      updatedAt: complaint.updatedAt,
+      complaint: dto,
+    });
+    emitRealtimeEvent('complaint_updated', dto);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Before Photo evidence uploaded successfully.',
+      data: evidenceData,
+      complaint: dto,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /api/complaints/:id/evidence
+const getComplaintEvidence = async (req, res, next) => {
+  try {
+    const idParam = req.params.id;
+    const query = mongoose.isValidObjectId(idParam) ? { _id: idParam } : { complaintId: idParam };
+    const complaint = await Complaint.findOne(query);
+
+    if (!complaint) {
+      return res.status(404).json({ success: false, message: 'Complaint not found.' });
+    }
+
+    // Role-based authorization
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(req.user?.role);
+    const isCitizenOwner = complaint.citizenId && complaint.citizenId.toString() === req.user._id.toString();
+    const isAssignedWorker = complaint.assignedWorkerId && complaint.assignedWorkerId.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isCitizenOwner && !isAssignedWorker) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: You do not have permission to view evidence for this complaint.',
+      });
+    }
+
+    const dto = complaint.toDTO();
+    const evidenceObj = dto.evidence || { before: null, after: null };
+    const hasBefore = !!(evidenceObj.before?.url || evidenceObj.before?.publicUrl || dto.imageUrl);
+    const hasAfter = !!(evidenceObj.after?.url || evidenceObj.after?.publicUrl || dto.afterImageUrl);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        complaintId: complaint.complaintId || complaint._id.toString(),
+        hasBeforePhoto: hasBefore,
+        hasAfterPhoto: hasAfter,
+        before: evidenceObj.before || null,
+        after: evidenceObj.after || null,
+        evidence: evidenceObj,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = {
+  submitComplaint,
+  getMyComplaints,
+  getComplaintsForMap,
+  getComplaintById,
+  getTimeline,
+  getComments,
+  postComment,
+  verifyResolution,
+  getProgressUpdates,
+  uploadBeforePhoto,
+  getComplaintEvidence,
+};

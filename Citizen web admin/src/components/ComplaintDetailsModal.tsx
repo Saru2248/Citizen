@@ -16,10 +16,14 @@ import {
   FileCheck,
   ArrowRight,
   TrendingUp,
-  Tag
+  Tag,
+  Maximize2,
+  RefreshCw,
+  AlertTriangle,
+  ExternalLink
 } from 'lucide-react';
 import { Complaint, ComplaintStatus, Priority, UserProfile, Department, WorkerReport } from '../types';
-import { adminApi } from '../services/apiService';
+import { adminApi, resolveImageUrl } from '../services/apiService';
 
 interface ComplaintDetailsModalProps {
   complaint: Complaint | null;
@@ -45,6 +49,9 @@ export const ComplaintDetailsModal: React.FC<ComplaintDetailsModalProps> = ({
   const [newNote, setNewNote] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'timeline' | 'evidence' | 'reports'>('details');
+  const [beforeImgError, setBeforeImgError] = useState(false);
+  const [afterImgError, setAfterImgError] = useState(false);
+  const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
 
   // Filter workers belonging to selected department
   const filteredWorkers = workers.filter(
@@ -413,61 +420,158 @@ export const ComplaintDetailsModal: React.FC<ComplaintDetailsModalProps> = ({
           )}
 
           {/* Tab 3: Before / After Evidence Photos */}
-          {activeTab === 'evidence' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Before Photo */}
-                <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-900 text-white flex flex-col">
-                  <div className="px-4 py-3 bg-slate-950 font-semibold text-xs text-slate-300 flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <Camera size={16} className="text-amber-400" />
-                      BEFORE PHOTO (Citizen Upload)
-                    </span>
-                    <span className="text-[10px] text-slate-400">Reported Evidence</span>
-                  </div>
-                  <div className="flex-1 flex items-center justify-center p-2 min-h-[300px] bg-slate-950/80">
-                    {complaint.imageUrl ? (
-                      <img
-                        src={complaint.imageUrl}
-                        alt="Before Photo"
-                        className="max-h-80 object-contain rounded-lg"
-                      />
-                    ) : (
-                      <div className="text-center p-6 text-slate-500 text-xs">
-                        <Camera size={32} className="mx-auto mb-2 opacity-50" />
-                        No before photo uploaded
-                      </div>
-                    )}
-                  </div>
-                </div>
+          {activeTab === 'evidence' && (() => {
+            const beforeUrl = resolveImageUrl(complaint.evidence?.before?.publicUrl || complaint.imageUrl);
+            const afterUrl = resolveImageUrl(complaint.evidence?.after?.publicUrl || complaint.afterImageUrl || complaint.completionPhotoUrl);
+            const beforeDate = complaint.evidence?.before?.uploadedAt
+              ? new Date(complaint.evidence.before.uploadedAt).toLocaleString()
+              : (complaint.reportedAt ? new Date(complaint.reportedAt).toLocaleString() : null);
+            const afterDate = complaint.evidence?.after?.uploadedAt
+              ? new Date(complaint.evidence.after.uploadedAt).toLocaleString()
+              : (complaint.resolvedAt ? new Date(complaint.resolvedAt).toLocaleString() : null);
+            const citizenUploader = complaint.citizenName || 'Citizen User';
+            const workerUploader = complaint.assignedWorkerName || (complaint.assignedWorkerId ? 'Assigned Worker' : null);
 
-                {/* After Photo */}
-                <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-900 text-white flex flex-col">
-                  <div className="px-4 py-3 bg-slate-950 font-semibold text-xs text-slate-300 flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <FileCheck size={16} className="text-emerald-400" />
-                      AFTER PHOTO (Worker Resolution Evidence)
-                    </span>
-                    <span className="text-[10px] text-slate-400">Completion Evidence</span>
-                  </div>
-                  <div className="flex-1 flex items-center justify-center p-2 min-h-[300px] bg-slate-950/80">
-                    {complaint.afterImageUrl ? (
-                      <img
-                        src={complaint.afterImageUrl}
-                        alt="After Photo"
-                        className="max-h-80 object-contain rounded-lg border border-emerald-500/30"
-                      />
-                    ) : (
-                      <div className="text-center p-6 text-slate-500 text-xs">
-                        <Camera size={32} className="mx-auto mb-2 opacity-50 text-slate-600" />
-                        Worker has not uploaded completion evidence yet
+            return (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Before Photo */}
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-900 text-white flex flex-col shadow-sm">
+                    <div className="px-4 py-3 bg-slate-950 font-semibold text-xs text-slate-300 flex items-center justify-between border-b border-slate-800">
+                      <span className="flex items-center gap-2">
+                        <Camera size={16} className="text-amber-400 shrink-0" />
+                        <span>BEFORE PHOTO (Citizen Upload)</span>
+                      </span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        Reported Evidence
+                      </span>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center p-3 min-h-[300px] bg-slate-950/80 relative">
+                      {beforeUrl && !beforeImgError ? (
+                        <div className="relative group w-full h-full flex items-center justify-center">
+                          <img
+                            src={beforeUrl}
+                            alt="Before Photo - Citizen Reported Evidence"
+                            onError={() => setBeforeImgError(true)}
+                            className="max-h-80 w-auto object-contain rounded-lg border border-slate-800 transition group-hover:brightness-105"
+                          />
+                          <button
+                            onClick={() => setPreviewImage({ url: beforeUrl, title: `BEFORE PHOTO — ${complaint.complaintId}` })}
+                            className="absolute bottom-3 right-3 px-2.5 py-1.5 bg-slate-900/90 text-white text-[11px] font-semibold rounded-lg shadow-lg border border-slate-700 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition hover:bg-slate-800"
+                          >
+                            <Maximize2 size={13} /> Expand
+                          </button>
+                        </div>
+                      ) : beforeImgError ? (
+                        <div className="text-center p-6 text-slate-400 text-xs space-y-2">
+                          <AlertTriangle size={32} className="mx-auto text-amber-500 opacity-80" />
+                          <p className="font-semibold text-slate-300">Unable to load before photo</p>
+                          <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                            The image file could not be accessed at {beforeUrl || 'the recorded URL'}.
+                          </p>
+                          <button
+                            onClick={() => setBeforeImgError(false)}
+                            className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[11px] font-medium transition inline-flex items-center gap-1"
+                          >
+                            <RefreshCw size={12} /> Retry
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-center p-6 text-slate-500 text-xs">
+                          <Camera size={36} className="mx-auto mb-2 opacity-40 text-slate-600" />
+                          <p className="font-medium text-slate-400">No before photo uploaded</p>
+                          <p className="text-[11px] text-slate-600 mt-0.5">The citizen did not attach photo evidence for this report.</p>
+                        </div>
+                      )}
+                    </div>
+                    {/* Metadata Footer */}
+                    <div className="px-4 py-2.5 bg-slate-950 border-t border-slate-800 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <User size={13} className="text-slate-500" />
+                        <span>Uploaded by: <strong className="text-slate-200">{citizenUploader}</strong> (Citizen)</span>
                       </div>
-                    )}
+                      {beforeDate && (
+                        <div className="flex items-center gap-1.5">
+                          <Calendar size={13} className="text-slate-500" />
+                          <span>{beforeDate}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* After Photo */}
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-900 text-white flex flex-col shadow-sm">
+                    <div className="px-4 py-3 bg-slate-950 font-semibold text-xs text-slate-300 flex items-center justify-between border-b border-slate-800">
+                      <span className="flex items-center gap-2">
+                        <FileCheck size={16} className="text-emerald-400 shrink-0" />
+                        <span>AFTER PHOTO (Worker Resolution Evidence)</span>
+                      </span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        Completion Evidence
+                      </span>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center p-3 min-h-[300px] bg-slate-950/80 relative">
+                      {afterUrl && !afterImgError ? (
+                        <div className="relative group w-full h-full flex items-center justify-center">
+                          <img
+                            src={afterUrl}
+                            alt="After Photo - Worker Resolution Evidence"
+                            onError={() => setAfterImgError(true)}
+                            className="max-h-80 w-auto object-contain rounded-lg border border-emerald-500/30 transition group-hover:brightness-105"
+                          />
+                          <button
+                            onClick={() => setPreviewImage({ url: afterUrl, title: `AFTER PHOTO — ${complaint.complaintId}` })}
+                            className="absolute bottom-3 right-3 px-2.5 py-1.5 bg-slate-900/90 text-white text-[11px] font-semibold rounded-lg shadow-lg border border-slate-700 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition hover:bg-slate-800"
+                          >
+                            <Maximize2 size={13} /> Expand
+                          </button>
+                        </div>
+                      ) : afterImgError ? (
+                        <div className="text-center p-6 text-slate-400 text-xs space-y-2">
+                          <AlertTriangle size={32} className="mx-auto text-amber-500 opacity-80" />
+                          <p className="font-semibold text-slate-300">Unable to load after photo</p>
+                          <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                            The image file could not be accessed at {afterUrl || 'the recorded URL'}.
+                          </p>
+                          <button
+                            onClick={() => setAfterImgError(false)}
+                            className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[11px] font-medium transition inline-flex items-center gap-1"
+                          >
+                            <RefreshCw size={12} /> Retry
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-center p-6 text-slate-500 text-xs">
+                          <Camera size={36} className="mx-auto mb-2 opacity-40 text-slate-600" />
+                          <p className="font-semibold text-slate-400">Worker has not uploaded completion evidence yet.</p>
+                          <p className="text-[11px] text-slate-600 mt-1">
+                            {complaint.status === 'COMPLETED' || complaint.status === 'RESOLVED'
+                              ? 'Task is marked resolved but no after image was attached.'
+                              : 'Resolution proof photo will appear here once the assigned worker completes the task.'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {/* Metadata Footer */}
+                    <div className="px-4 py-2.5 bg-slate-950 border-t border-slate-800 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <HardHat size={13} className="text-emerald-500" />
+                        <span>Worker: <strong className="text-slate-200">{workerUploader || 'Not assigned yet'}</strong></span>
+                      </div>
+                      {afterDate ? (
+                        <div className="flex items-center gap-1.5">
+                          <Calendar size={13} className="text-slate-500" />
+                          <span>{afterDate}</span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-600 italic">Pending completion</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Tab 4: Worker Progress Reports */}
           {activeTab === 'reports' && (
@@ -509,6 +613,47 @@ export const ComplaintDetailsModal: React.FC<ComplaintDetailsModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Fullscreen Photo Lightbox Preview */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[90vh] bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-3.5 bg-slate-900 flex items-center justify-between border-b border-slate-800">
+              <span className="font-bold text-sm text-white">{previewImage.title}</span>
+              <div className="flex items-center gap-2">
+                <a
+                  href={previewImage.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                  title="Open in new tab"
+                >
+                  <ExternalLink size={16} />
+                </a>
+                <button
+                  onClick={() => setPreviewImage(null)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            <div className="p-4 flex items-center justify-center overflow-auto max-h-[80vh]">
+              <img
+                src={previewImage.url}
+                alt={previewImage.title}
+                className="max-w-full max-h-[75vh] object-contain rounded-lg"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -19,6 +19,23 @@ const aiAnalysisSchema = new mongoose.Schema({
   confidence:        Number,
 }, { _id: false });
 
+const evidenceItemSchema = new mongoose.Schema({
+  storageProvider:  { type: String, default: 'LOCAL' },
+  storagePath:      { type: String, default: null },
+  publicUrl:        { type: String, default: null },
+  uploadedBy:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  uploadedByRole:   { type: String, enum: ['CITIZEN', 'WORKER', 'ADMIN'], default: 'CITIZEN' },
+  uploadedAt:       { type: Date, default: Date.now },
+  mimeType:         { type: String, default: null },
+  fileSize:         { type: Number, default: null },
+  originalFileName: { type: String, default: null },
+}, { _id: false });
+
+const evidenceSchema = new mongoose.Schema({
+  before: { type: evidenceItemSchema, default: null },
+  after:  { type: evidenceItemSchema, default: null },
+}, { _id: false });
+
 const ALLOWED_STATUSES = [
   'SUBMITTED', 'DEPARTMENT_ASSIGNED', 'WORKER_ASSIGNED', 'WORK_STARTED',
   'IN_PROGRESS', 'COMPLETED', 'VERIFICATION_REQUIRED',
@@ -97,6 +114,7 @@ const complaintSchema = new mongoose.Schema({
   imageUrl:           { type: String, default: null },
   afterImageUrl:      { type: String, default: null },
   completionPhotoUrl: { type: String, default: null },
+  evidence:           { type: evidenceSchema, default: () => ({ before: null, after: null }) },
   latitude:           { type: Number, required: true },
   longitude:          { type: Number, required: true },
   address:            { type: String, required: true },
@@ -167,6 +185,17 @@ complaintSchema.methods.toDTO = function () {
     timestamp: iso(h.timestamp),
   }));
 
+  const normalizeUrl = (u) => {
+    if (!u) return null;
+    if (u.includes('/uploads/')) {
+      return `/uploads/${u.split('/uploads/')[1]}`;
+    }
+    return u;
+  };
+
+  const beforeUrl = normalizeUrl(this.evidence?.before?.publicUrl || this.imageUrl);
+  const afterUrl = normalizeUrl(this.evidence?.after?.publicUrl || this.afterImageUrl || this.completionPhotoUrl);
+
   const dtoData = {
     id: this._id.toString(),
     _id: this._id.toString(),
@@ -178,10 +207,58 @@ complaintSchema.methods.toDTO = function () {
     issueType: this.issueType,
     category: this.category,
     description: this.description,
-    imageUrl: this.imageUrl,
-    photoUrl: this.imageUrl,
-    afterImageUrl: this.afterImageUrl,
-    completionPhotoUrl: this.completionPhotoUrl,
+    imageUrl: beforeUrl,
+    photoUrl: beforeUrl,
+    afterImageUrl: afterUrl,
+    completionPhotoUrl: afterUrl,
+    evidence: {
+      before: this.evidence?.before ? {
+        storageProvider: this.evidence.before.storageProvider || 'LOCAL',
+        storagePath: this.evidence.before.storagePath || null,
+        publicUrl: normalizeUrl(this.evidence.before.publicUrl) || beforeUrl,
+        url: normalizeUrl(this.evidence.before.publicUrl) || beforeUrl,
+        uploadedBy: this.evidence.before.uploadedBy ? this.evidence.before.uploadedBy.toString() : (this.citizenId ? this.citizenId.toString() : null),
+        uploadedByRole: this.evidence.before.uploadedByRole || 'CITIZEN',
+        uploadedAt: iso(this.evidence.before.uploadedAt || this.createdAt),
+        mimeType: this.evidence.before.mimeType || null,
+        fileSize: this.evidence.before.fileSize || null,
+        originalFileName: this.evidence.before.originalFileName || null,
+      } : (beforeUrl ? {
+        storageProvider: 'LOCAL',
+        storagePath: null,
+        publicUrl: beforeUrl,
+        url: beforeUrl,
+        uploadedBy: this.citizenId ? this.citizenId.toString() : null,
+        uploadedByRole: 'CITIZEN',
+        uploadedAt: iso(this.createdAt),
+        mimeType: null,
+        fileSize: null,
+        originalFileName: null,
+      } : null),
+      after: this.evidence?.after ? {
+        storageProvider: this.evidence.after.storageProvider || 'LOCAL',
+        storagePath: this.evidence.after.storagePath || null,
+        publicUrl: normalizeUrl(this.evidence.after.publicUrl) || afterUrl,
+        url: normalizeUrl(this.evidence.after.publicUrl) || afterUrl,
+        uploadedBy: this.evidence.after.uploadedBy ? this.evidence.after.uploadedBy.toString() : (this.assignedWorkerId ? this.assignedWorkerId.toString() : null),
+        uploadedByRole: this.evidence.after.uploadedByRole || 'WORKER',
+        uploadedAt: iso(this.evidence.after.uploadedAt || this.resolvedAt || this.updatedAt),
+        mimeType: this.evidence.after.mimeType || null,
+        fileSize: this.evidence.after.fileSize || null,
+        originalFileName: this.evidence.after.originalFileName || null,
+      } : (afterUrl ? {
+        storageProvider: 'LOCAL',
+        storagePath: null,
+        publicUrl: afterUrl,
+        url: afterUrl,
+        uploadedBy: this.assignedWorkerId ? this.assignedWorkerId.toString() : null,
+        uploadedByRole: 'WORKER',
+        uploadedAt: iso(this.resolvedAt || this.updatedAt),
+        mimeType: null,
+        fileSize: null,
+        originalFileName: null,
+      } : null),
+    },
     latitude: this.latitude,
     longitude: this.longitude,
     address: this.address,

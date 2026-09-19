@@ -83,6 +83,7 @@ data class ComplaintDto(
     @SerializedName("citizenPhone") val citizenPhone: String? = null,
     @SerializedName("createdAt") val createdAt: String? = null,
     @SerializedName("updatedAt") val updatedAt: String? = null,
+    @SerializedName("evidence") val evidence: EvidenceDto? = null,
     @SerializedName("statusHistory") val statusHistory: List<StatusHistoryDto>? = null
 )
 
@@ -94,6 +95,20 @@ data class StatusHistoryDto(
     @SerializedName("actorType") val actorType: String? = null,
     @SerializedName("actorId") val actorId: String? = null,
     @SerializedName("timestamp") val timestamp: String? = null
+)
+
+data class EvidenceDto(
+    @SerializedName("before") val before: EvidenceItemDto? = null,
+    @SerializedName("after") val after: EvidenceItemDto? = null
+)
+
+data class EvidenceItemDto(
+    @SerializedName("url") val url: String? = null,
+    @SerializedName("publicUrl") val publicUrl: String? = null,
+    @SerializedName("uploadedAt") val uploadedAt: String? = null,
+    @SerializedName("uploadedByRole") val uploadedByRole: String? = null,
+    @SerializedName("storageProvider") val storageProvider: String? = null,
+    @SerializedName("originalFileName") val originalFileName: String? = null
 )
 
 data class WorkReportDto(
@@ -108,6 +123,11 @@ data class WorkReportDto(
     @SerializedName("completionDate") val completionDate: String? = null,
     @SerializedName("beforePhotoUrl") val beforePhotoUrl: String? = null,
     @SerializedName("afterPhotoUrl") val afterPhotoUrl: String? = null,
+    @SerializedName("beforeUploadedAt") val beforeUploadedAt: String? = null,
+    @SerializedName("beforeUploadedByRole") val beforeUploadedByRole: String? = null,
+    @SerializedName("afterUploadedAt") val afterUploadedAt: String? = null,
+    @SerializedName("afterUploadedByRole") val afterUploadedByRole: String? = null,
+    @SerializedName("evidence") val evidence: EvidenceDto? = null,
     @SerializedName("workerNotes") val workerNotes: String? = null,
     @SerializedName("statusHistory") val statusHistory: List<StatusHistoryDto>? = null,
     @SerializedName("finalStatus") val finalStatus: String? = null

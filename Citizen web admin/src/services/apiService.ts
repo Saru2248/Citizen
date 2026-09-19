@@ -54,11 +54,23 @@ export const authApi = {
   me: () => get<{ token: string; user: any }>('/auth/me'),
 };
 
+// ─── Universal Image URL Resolver ──────────────────────────────────────────────
+export const resolveImageUrl = (url?: string | null): string => {
+  if (!url) return '';
+  // Normalize host-dependent or absolute URLs containing /uploads/ to root-relative /uploads/...
+  if (url.includes('/uploads/')) {
+    const filename = url.split('/uploads/')[1];
+    return `/uploads/${filename}`;
+  }
+  return url;
+};
+
 // ─── Complaint API ─────────────────────────────────────────────────────────────
 export const complaintApi = {
   submit: (formData: FormData) => post<any>('/complaints', formData, true),
   getMine: () => get<any[]>('/complaints/my'),
   getById: (id: string) => get<any>(`/complaints/${id}`),
+  getEvidence: (id: string) => get<{ complaintId: string; evidence: any }>(`/complaints/${id}/evidence`),
   getTimeline: (id: string) => get<any[]>(`/complaints/${id}/timeline`),
   getComments: (id: string) => get<any[]>(`/complaints/${id}/comments`),
   postComment: (id: string, message: string) => post<any>(`/complaints/${id}/comments`, { message }),

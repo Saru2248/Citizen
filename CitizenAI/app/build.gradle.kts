@@ -20,7 +20,7 @@ val localProperties = Properties().apply {
     }
 }
 
-val devLanHost = localProperties.getProperty("CITIZEN_AI_DEV_LAN_HOST") ?: "192.168.0.105"
+val devLanHost = localProperties.getProperty("CITIZEN_AI_DEV_LAN_HOST") ?: "10.117.51.141"
 val devPort = localProperties.getProperty("CITIZEN_AI_DEV_PORT") ?: "8000"
 val stagingApiUrl = localProperties.getProperty("CITIZEN_AI_STAGING_API_URL") ?: "https://staging-api.citizenai.org/api/"
 val prodApiUrl = localProperties.getProperty("CITIZEN_AI_PROD_API_URL") ?: "https://api.citizenai.org/api/"

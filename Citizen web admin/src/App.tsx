@@ -48,6 +48,7 @@ const mapComplaint = (c: any): Complaint => ({
   imageUrl: c.imageUrl || undefined,
   afterImageUrl: c.afterImageUrl || undefined,
   completionPhotoUrl: c.completionPhotoUrl || undefined,
+  evidence: c.evidence,
   latitude: c.latitude ?? 18.5204,
   longitude: c.longitude ?? 73.8567,
   address: c.address || '',
@@ -199,6 +200,7 @@ const AdminPanelContent: React.FC = () => {
     socket.on('task_started', handleRealtimeEvent);
     socket.on('task_progress', handleRealtimeEvent);
     socket.on('task_completed', handleRealtimeEvent);
+    socket.on('complaint:evidence-updated', handleRealtimeEvent);
     socket.on('complaint_verified', handleRealtimeEvent);
     socket.on('complaint_resolved', handleRealtimeEvent);
     socket.on('COMPLAINT_UPDATED', handleRealtimeEvent);
@@ -212,6 +214,7 @@ const AdminPanelContent: React.FC = () => {
       socket.off('task_started', handleRealtimeEvent);
       socket.off('task_progress', handleRealtimeEvent);
       socket.off('task_completed', handleRealtimeEvent);
+      socket.off('complaint:evidence-updated', handleRealtimeEvent);
       socket.off('complaint_verified', handleRealtimeEvent);
       socket.off('complaint_resolved', handleRealtimeEvent);
       socket.off('COMPLAINT_UPDATED', handleRealtimeEvent);
@@ -360,7 +363,9 @@ const AdminPanelContent: React.FC = () => {
       {/* Complaint Details Modal */}
       {selectedComplaint && (
         <ComplaintDetailsModal
-          complaint={selectedComplaint}
+          complaint={
+            complaints.find((c) => c.id === selectedComplaint.id || c.complaintId === selectedComplaint.complaintId) || selectedComplaint
+          }
           onClose={() => { setSelectedComplaint(null); fetchAllData(); }}
           workers={users}
           departments={departments}

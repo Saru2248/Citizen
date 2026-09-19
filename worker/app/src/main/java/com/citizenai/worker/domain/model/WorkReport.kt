@@ -14,6 +14,10 @@ data class WorkReport(
     val completionDate: String? = null,
     val beforePhotoUrl: String? = null,
     val afterPhotoUrl: String? = null,
+    val beforeUploadedAt: String? = null,
+    val beforeUploadedByRole: String? = null,
+    val afterUploadedAt: String? = null,
+    val afterUploadedByRole: String? = null,
     val workerNotes: String? = null,
     val statusHistory: List<StatusHistoryItem> = emptyList(),
     val finalStatus: String = "COMPLETED"

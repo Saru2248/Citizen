@@ -41,10 +41,35 @@ class WorkerRepositoryImpl @Inject constructor(
 
     private fun resolveImageUrl(url: String?): String? {
         if (url.isNullOrBlank()) return null
-        if (url.startsWith("http://") || url.startsWith("https://")) return url
+        val trimmed = url.trim()
         val base = BuildConfig.API_BASE_URL.removeSuffix("/api/").removeSuffix("/")
-        val clean = if (url.startsWith("/")) url else "/$url"
-        return "$base$clean"
+
+        val isLocalHost = trimmed.contains("localhost") ||
+                trimmed.contains("127.0.0.1") ||
+                trimmed.contains("10.0.2.2") ||
+                trimmed.contains(":8000") ||
+                trimmed.contains(":5000")
+
+        if ((trimmed.startsWith("http://") || trimmed.startsWith("https://")) && !isLocalHost && !trimmed.contains("/uploads/")) {
+            Log.d("WorkerRepository", "[IMAGE URL] Using remote URL: $trimmed")
+            return trimmed
+        }
+
+        if (trimmed.contains("/uploads/")) {
+            val filename = trimmed.substringAfter("/uploads/").trimStart('/')
+            val resolved = "$base/uploads/$filename"
+            Log.d("WorkerRepository", "[IMAGE URL] Resolved local upload: $resolved")
+            return resolved
+        }
+
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            return trimmed
+        }
+
+        val clean = if (trimmed.startsWith("/")) trimmed else "/$trimmed"
+        val resolved = "$base$clean"
+        Log.d("WorkerRepository", "[IMAGE URL] Resolved relative path: $resolved")
+        return resolved
     }
 
     private fun mapDtoToTask(dto: ComplaintDto): WorkerTask {
@@ -168,6 +193,9 @@ class WorkerRepositoryImpl @Inject constructor(
                     )
                 } ?: emptyList()
 
+                val rawBeforeUrl = d.beforePhotoUrl ?: d.evidence?.before?.publicUrl ?: d.evidence?.before?.url
+                val rawAfterUrl = d.afterPhotoUrl ?: d.evidence?.after?.publicUrl ?: d.evidence?.after?.url
+
                 val report = WorkReport(
                     complaintId = d.complaintId ?: taskId,
                     issueCategory = d.issueCategory ?: "Issue",
@@ -180,8 +208,12 @@ class WorkerRepositoryImpl @Inject constructor(
                     reportedDate = d.reportedDate,
                     startedAt = d.startedAt,
                     completionDate = d.completionDate,
-                    beforePhotoUrl = d.beforePhotoUrl,
-                    afterPhotoUrl = d.afterPhotoUrl,
+                    beforePhotoUrl = resolveImageUrl(rawBeforeUrl),
+                    afterPhotoUrl = resolveImageUrl(rawAfterUrl),
+                    beforeUploadedAt = d.beforeUploadedAt ?: d.evidence?.before?.uploadedAt,
+                    beforeUploadedByRole = d.beforeUploadedByRole ?: d.evidence?.before?.uploadedByRole,
+                    afterUploadedAt = d.afterUploadedAt ?: d.evidence?.after?.uploadedAt,
+                    afterUploadedByRole = d.afterUploadedByRole ?: d.evidence?.after?.uploadedByRole,
                     workerNotes = d.workerNotes,
                     statusHistory = history,
                     finalStatus = d.finalStatus ?: "COMPLETED"

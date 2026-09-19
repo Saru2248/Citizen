@@ -3,6 +3,7 @@ package com.citizenai.worker.presentation.action
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,7 +11,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
 import com.citizenai.worker.presentation.theme.*
 import java.io.File
@@ -36,6 +41,7 @@ fun CompleteTaskDialog(
     var notesText by remember { mutableStateOf("") }
     var selectedPhotoUri by remember { mutableStateOf<Uri?>(null) }
     var photoFile by remember { mutableStateOf<File?>(null) }
+    var cameraTempFile by remember { mutableStateOf<File?>(null) }
     var validationError by remember { mutableStateOf<String?>(null) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -55,6 +61,28 @@ fun CompleteTaskDialog(
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success && cameraTempFile != null) {
+            photoFile = cameraTempFile
+            selectedPhotoUri = Uri.fromFile(cameraTempFile)
+            validationError = null
+        }
+    }
+
+    val launchCamera = {
+        try {
+            val file = File.createTempFile("after_camera_", ".jpg", context.cacheDir)
+            cameraTempFile = file
+            val authority = "${context.packageName}.fileprovider"
+            val uri = FileProvider.getUriForFile(context, authority, file)
+            cameraLauncher.launch(uri)
+        } catch (e: Exception) {
+            validationError = "Failed to launch camera: ${e.message}"
         }
     }
 
@@ -109,7 +137,7 @@ fun CompleteTaskDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(150.dp)
+                            .height(160.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .border(1.5.dp, CivicGreen, RoundedCornerShape(12.dp))
                     ) {
@@ -119,19 +147,50 @@ fun CompleteTaskDialog(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
+                        IconButton(
+                            onClick = {
+                                selectedPhotoUri = null
+                                photoFile = null
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(6.dp)
+                                .size(28.dp)
+                                .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(14.dp))
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = "Remove Photo", tint = Color.White, modifier = Modifier.size(16.dp))
+                        }
                     }
                 } else {
-                    Button(
-                        onClick = { photoPickerLauncher.launch("image/*") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = CivicGreen)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.AddAPhoto, contentDescription = null, tint = Color.White)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("ATTACH AFTER PHOTO *", fontWeight = FontWeight.Bold, color = Color.White)
+                        Button(
+                            onClick = { launchCamera() },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = CivicGreen)
+                        ) {
+                            Icon(Icons.Default.CameraAlt, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("CAMERA", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 12.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = { photoPickerLauncher.launch("image/*") },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.5.dp, CivicGreen)
+                        ) {
+                            Icon(Icons.Default.PhotoLibrary, contentDescription = null, tint = CivicGreen, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("GALLERY", fontWeight = FontWeight.Bold, color = CivicGreen, fontSize = 12.sp)
+                        }
                     }
                 }
 
