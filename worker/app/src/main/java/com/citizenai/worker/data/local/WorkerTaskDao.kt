@@ -9,6 +9,9 @@ interface WorkerTaskDao {
     @Query("SELECT * FROM worker_tasks ORDER BY updatedAt DESC")
     fun getAllTasks(): Flow<List<WorkerTaskEntity>>
 
+    @Query("SELECT * FROM worker_tasks ORDER BY updatedAt DESC")
+    suspend fun getAllTasksList(): List<WorkerTaskEntity>
+
     @Query("SELECT * FROM worker_tasks WHERE id = :id OR complaintId = :id LIMIT 1")
     suspend fun getTaskById(id: String): WorkerTaskEntity?
 

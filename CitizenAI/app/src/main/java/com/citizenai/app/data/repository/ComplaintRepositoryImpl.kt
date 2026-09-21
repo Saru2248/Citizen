@@ -76,7 +76,7 @@ class ComplaintRepositoryImpl @Inject constructor(
                     e is java.net.ConnectException || e.message?.contains("Failed to connect") == true ->
                         "Cannot connect to server at $apiUrl. Please verify backend is running and network is connected."
                     e is java.net.SocketTimeoutException ->
-                        "Connection timed out waiting for server ($apiUrl)."
+                        "Connection timed out waiting for server ($apiUrl). If connecting over Wi-Fi LAN, ensure port 8000 is open in your PC firewall; for USB, verify 'adb reverse tcp:8000 tcp:8000'."
                     e is java.net.UnknownHostException ->
                         "Could not resolve server host ($apiUrl)."
                     else -> e.message ?: "Network error: ${e.javaClass.simpleName}"

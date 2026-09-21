@@ -128,10 +128,22 @@ class WorkerRepositoryImpl @Inject constructor(
                 Log.i("WorkerRepository", "[WORKER TASK] Loaded: ${tasks.size} tasks")
                 Result.success(tasks)
             } else {
-                Result.failure(Exception("Failed to fetch tasks: ${response.message()}"))
+                val cached = runCatching { taskDao.getAllTasksList() }.getOrDefault(emptyList())
+                if (cached.isNotEmpty()) {
+                    Log.i("WorkerRepository", "Serving ${cached.size} cached tasks after HTTP ${response.code()}")
+                    Result.success(cached.map { it.toDomain(gson) })
+                } else {
+                    Result.failure(Exception("Failed to fetch tasks: ${response.message()}"))
+                }
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            val cached = runCatching { taskDao.getAllTasksList() }.getOrDefault(emptyList())
+            if (cached.isNotEmpty()) {
+                Log.i("WorkerRepository", "Serving ${cached.size} cached tasks after network failure: ${e.message}")
+                Result.success(cached.map { it.toDomain(gson) })
+            } else {
+                Result.failure(e)
+            }
         }
     }
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Explicit domain configurations for local development hosts -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+    <!-- Permit cleartext HTTP traffic for local development; staging/production enforce HTTPS via BuildConfig endpoints -->
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
