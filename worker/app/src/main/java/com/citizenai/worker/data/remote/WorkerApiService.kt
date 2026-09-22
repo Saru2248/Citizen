@@ -38,10 +38,10 @@ interface WorkerApiService {
     suspend fun getWorkerProfile(): Response<ApiResponseDto<UserDto>>
 
     @GET("worker/tasks")
-    suspend fun getWorkerTasks(): Response<List<ComplaintDto>>
+    suspend fun getWorkerTasks(): Response<ApiResponseDto<List<ComplaintDto>>>
 
     @GET("worker/tasks/history")
-    suspend fun getTaskHistory(): Response<List<ComplaintDto>>
+    suspend fun getTaskHistory(): Response<ApiResponseDto<List<ComplaintDto>>>
 
     @GET("worker/tasks/{id}")
     suspend fun getTaskById(@Path("id") taskId: String): Response<ComplaintDto>

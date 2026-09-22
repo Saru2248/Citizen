@@ -26,9 +26,19 @@ const getImageUrl = (req, filename) => {
   return `/uploads/${path.basename(filename)}`;
 };
 
+// Helper: Build comprehensive assignment filter for an authenticated worker
+const getWorkerAssignmentFilter = (user) => {
+  const workerObjId = user._id;
+  return {
+    assignedWorkerId: workerObjId
+  };
+};
+
 // Helper: Resolve assigned complaint for authenticated worker by Complaint._id, complaintId, or WorkerTask._id
-const findComplaintForWorker = async (paramId, workerId) => {
+const findComplaintForWorker = async (paramId, workerIdentifier) => {
   const isObjId = mongoose.isValidObjectId(paramId);
+  const workerObj = (workerIdentifier && workerIdentifier._id) ? workerIdentifier : { _id: workerIdentifier };
+  const workerId = workerObj._id;
   let complaint = null;
 
   if (isObjId) {
@@ -53,8 +63,9 @@ const findComplaintForWorker = async (paramId, workerId) => {
 const getWorkerProfile = async (req, res, next) => {
   try {
     const user = req.user;
-    const completedCount = await Complaint.countDocuments({ assignedWorkerId: user._id, status: { $in: ['COMPLETED', 'VERIFICATION_REQUIRED', 'RESOLVED'] } });
-    const inProgressCount = await Complaint.countDocuments({ assignedWorkerId: user._id, status: { $in: ['WORKER_ASSIGNED', 'WORK_STARTED', 'IN_PROGRESS'] } });
+    const workerFilter = getWorkerAssignmentFilter(user);
+    const completedCount = await Complaint.countDocuments({ ...workerFilter, status: { $in: ['COMPLETED', 'VERIFICATION_REQUIRED', 'RESOLVED'] } });
+    const inProgressCount = await Complaint.countDocuments({ ...workerFilter, status: { $in: ['WORKER_ASSIGNED', 'WORK_STARTED', 'IN_PROGRESS'] } });
 
     const profileData = {
       ...user.toPublicJSON(),
@@ -70,8 +81,9 @@ const getWorkerProfile = async (req, res, next) => {
 // GET /api/worker/tasks
 const getWorkerTasks = async (req, res, next) => {
   try {
+    const workerFilter = getWorkerAssignmentFilter(req.user);
     const complaints = await Complaint.find({
-      assignedWorkerId: req.user._id,
+      ...workerFilter,
       status: { $nin: ['RESOLVED', 'REJECTED', 'CANCELLED'] },
     }).sort({ updatedAt: -1 });
 
@@ -86,13 +98,15 @@ const getWorkerTasks = async (req, res, next) => {
 // GET /api/worker/tasks/history
 const getTaskHistory = async (req, res, next) => {
   try {
+    const workerFilter = getWorkerAssignmentFilter(req.user);
     const complaints = await Complaint.find({
-      assignedWorkerId: req.user._id,
+      ...workerFilter,
       status: { $in: ['COMPLETED', 'VERIFICATION_REQUIRED', 'RESOLVED'] },
     }).sort({ updatedAt: -1 }).limit(50);
 
     const dtos = complaints.map((c) => c.toDTO().data || c.toDTO());
-    return res.json({ success: true, data: dtos, tasks: dtos });
+    console.log(`[WORKER HISTORY] Loaded: ${dtos.length} history tasks for worker ${req.user.name}`);
+    return res.json({ success: true, data: dtos, tasks: dtos, complaints: dtos });
   } catch (err) {
     next(err);
   }
@@ -750,16 +764,17 @@ const getWorkerDashboard = async (req, res, next) => {
   try {
     const user = req.user;
     const workerId = user._id;
+    const workerFilter = getWorkerAssignmentFilter(user);
 
     // 1. Total Logins
     const totalLogins = user.totalLogins || await WorkerLoginActivity.countDocuments({ workerUserId: workerId });
 
     // 2. Total Assigned Complaints
-    const totalAssignedComplaints = await Complaint.countDocuments({ assignedWorkerId: workerId });
+    const totalAssignedComplaints = await Complaint.countDocuments(workerFilter);
 
     // 3. New Complaints: Assigned to worker, progress not started (progress 0)
     const newComplaints = await Complaint.countDocuments({
-      assignedWorkerId: workerId,
+      ...workerFilter,
       status: { $in: ['WORKER_ASSIGNED', 'ASSIGNED', 'DEPARTMENT_ASSIGNED'] },
       $or: [
         { progressPercentage: { $exists: false } },
@@ -770,7 +785,7 @@ const getWorkerDashboard = async (req, res, next) => {
 
     // 4. Pending Complaints: Assigned/pending/under review, progress < 100
     const pendingComplaints = await Complaint.countDocuments({
-      assignedWorkerId: workerId,
+      ...workerFilter,
       status: { $in: ['WORKER_ASSIGNED', 'PENDING', 'ASSIGNED', 'DEPARTMENT_ASSIGNED', 'UNDER_REVIEW'] },
       $or: [
         { progressPercentage: { $exists: false } },
@@ -781,18 +796,18 @@ const getWorkerDashboard = async (req, res, next) => {
 
     // 5. In Progress Complaints: Work started or in progress
     const inProgressComplaints = await Complaint.countDocuments({
-      assignedWorkerId: workerId,
+      ...workerFilter,
       status: { $in: ['WORK_STARTED', 'IN_PROGRESS', 'PROGRESS_UPDATE'] },
     });
 
     // 6. Completed Complaints: Completed, resolved, or awaiting citizen verification
     const completedComplaints = await Complaint.countDocuments({
-      assignedWorkerId: workerId,
+      ...workerFilter,
       status: { $in: ['COMPLETED', 'VERIFICATION_REQUIRED', 'WORK_COMPLETED', 'RESOLVED', 'ADMIN_REVIEW'] },
     });
 
     // 7. Recent Complaints (most recent assigned complaints)
-    const recent = await Complaint.find({ assignedWorkerId: workerId })
+    const recent = await Complaint.find(workerFilter)
       .sort({ updatedAt: -1 })
       .limit(5);
 

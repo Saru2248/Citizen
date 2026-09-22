@@ -4,6 +4,7 @@ import android.app.Activity
 import android.util.Log
 import com.citizenai.worker.BuildConfig
 import com.citizenai.worker.data.local.SessionManager
+import com.citizenai.worker.data.local.WorkerTaskDao
 import com.citizenai.worker.data.remote.WorkerApiService
 import com.citizenai.worker.data.remote.dto.*
 import com.citizenai.worker.domain.model.WorkerUser
@@ -29,7 +30,8 @@ import javax.inject.Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val apiService: WorkerApiService,
     private val sessionManager: SessionManager,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val taskDao: WorkerTaskDao
 ) : AuthRepository {
 
     private val TAG = "WorkerAuth"
@@ -348,5 +350,6 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun logout() {
         firebaseAuth.signOut()
         sessionManager.clearSession()
+        runCatching { taskDao.clearAll() }
     }
 }

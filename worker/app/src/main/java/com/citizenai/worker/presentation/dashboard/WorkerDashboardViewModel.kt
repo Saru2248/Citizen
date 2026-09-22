@@ -94,6 +94,7 @@ class WorkerDashboardViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             val dashboardRes = workerRepository.fetchWorkerDashboard()
             val tasksRes = workerRepository.fetchWorkerTasks()
+            val historyRes = workerRepository.fetchTaskHistory()
 
             dashboardRes.fold(
                 onSuccess = { d ->
@@ -114,18 +115,15 @@ class WorkerDashboardViewModel @Inject constructor(
                 }
             )
 
-            tasksRes.fold(
-                onSuccess = { tasks ->
-                    _uiState.value = _uiState.value.copy(isLoading = false, tasks = tasks)
-                    updateStats(tasks)
-                },
-                onFailure = { err ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = err.message ?: "Failed to refresh dashboard data"
-                    )
-                }
-            )
+            if (tasksRes.isSuccess || historyRes.isSuccess || dashboardRes.isSuccess) {
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            } else {
+                val errorMsg = tasksRes.exceptionOrNull()?.message
+                    ?: historyRes.exceptionOrNull()?.message
+                    ?: dashboardRes.exceptionOrNull()?.message
+                    ?: "Failed to refresh dashboard data"
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = errorMsg)
+            }
         }
     }
 
@@ -167,12 +165,17 @@ class WorkerDashboardViewModel @Inject constructor(
 
     private fun updateStats(tasks: List<WorkerTask>) {
         val current = _uiState.value
-        // If backend dashboard returned 0 for totalAssignedComplaints or was not fetched, derive from tasks list
+        val derivedNew = tasks.count { it.status == TaskStatus.WORKER_ASSIGNED && it.progressPercentage == 0 }
+        val derivedPending = tasks.count { it.status == TaskStatus.WORKER_ASSIGNED }
+        val derivedInProgress = tasks.count { it.status == TaskStatus.WORK_STARTED || it.status == TaskStatus.IN_PROGRESS }
+        val derivedCompleted = tasks.count { it.status == TaskStatus.COMPLETED || it.status == TaskStatus.VERIFICATION_REQUIRED || it.status == TaskStatus.RESOLVED }
+
+        // Safeguard against overwriting live server metrics with 0 during initial/empty Room cache emissions
         val assigned = if (current.totalAssignedComplaints > 0) current.totalAssignedComplaints else tasks.size
-        val newC = if (current.newComplaints > 0) current.newComplaints else tasks.count { it.status == TaskStatus.WORKER_ASSIGNED && it.progressPercentage == 0 }
-        val pending = if (current.pendingComplaints > 0) current.pendingComplaints else tasks.count { it.status == TaskStatus.WORKER_ASSIGNED }
-        val inProg = if (current.inProgressComplaints > 0) current.inProgressComplaints else tasks.count { it.status == TaskStatus.WORK_STARTED || it.status == TaskStatus.IN_PROGRESS }
-        val comp = if (current.completedComplaints > 0) current.completedComplaints else tasks.count { it.status == TaskStatus.COMPLETED || it.status == TaskStatus.VERIFICATION_REQUIRED || it.status == TaskStatus.RESOLVED }
+        val newC = if (current.newComplaints > 0) current.newComplaints else derivedNew
+        val pending = if (current.pendingComplaints > 0) current.pendingComplaints else derivedPending
+        val inProg = if (current.inProgressComplaints > 0) current.inProgressComplaints else derivedInProgress
+        val comp = if (current.completedComplaints > 0) current.completedComplaints else derivedCompleted
 
         _uiState.value = _uiState.value.copy(
             tasks = tasks,

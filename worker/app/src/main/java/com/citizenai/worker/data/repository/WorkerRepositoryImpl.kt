@@ -118,14 +118,15 @@ class WorkerRepositoryImpl @Inject constructor(
     override suspend fun fetchWorkerTasks(): Result<List<WorkerTask>> {
         return try {
             val response = apiService.getWorkerTasks()
-            if (response.isSuccessful && response.body() != null) {
-                val dtoList = response.body()!!
+            val body = response.body()
+            val dtoList = body?.data ?: body?.tasks ?: body?.complaints
+            if (response.isSuccessful && dtoList != null) {
                 val tasks = dtoList.map { mapDtoToTask(it) }
 
-                // Cache in Room
+                // Cache active tasks in Room without clearing previous entries
                 taskDao.insertTasks(tasks.map { WorkerTaskEntity.fromDomain(it, gson) })
 
-                Log.i("WorkerRepository", "[WORKER TASK] Loaded: ${tasks.size} tasks")
+                Log.i("WorkerRepository", "[WORKER TASK] Loaded: ${tasks.size} active tasks")
                 Result.success(tasks)
             } else {
                 val cached = runCatching { taskDao.getAllTasksList() }.getOrDefault(emptyList())
@@ -150,15 +151,37 @@ class WorkerRepositoryImpl @Inject constructor(
     override suspend fun fetchTaskHistory(): Result<List<WorkerTask>> {
         return try {
             val response = apiService.getTaskHistory()
-            if (response.isSuccessful && response.body() != null) {
-                val dtoList = response.body()!!
+            val body = response.body()
+            val dtoList = body?.data ?: body?.tasks ?: body?.complaints
+            if (response.isSuccessful && dtoList != null) {
                 val tasks = dtoList.map { mapDtoToTask(it) }
+
+                // Merge completed/historical tasks into Room cache safely
+                taskDao.insertTasks(tasks.map { WorkerTaskEntity.fromDomain(it, gson) })
+
+                Log.i("WorkerRepository", "[WORKER TASK HISTORY] Loaded: ${tasks.size} history tasks")
                 Result.success(tasks)
             } else {
-                Result.failure(Exception("Failed to fetch task history"))
+                val cached = runCatching { taskDao.getAllTasksList() }.getOrDefault(emptyList())
+                val historyCached = cached.filter {
+                    it.status == "COMPLETED" || it.status == "RESOLVED" || it.status == "VERIFICATION_REQUIRED"
+                }
+                if (historyCached.isNotEmpty()) {
+                    Result.success(historyCached.map { it.toDomain(gson) })
+                } else {
+                    Result.failure(Exception("Failed to fetch task history: ${response.message()}"))
+                }
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            val cached = runCatching { taskDao.getAllTasksList() }.getOrDefault(emptyList())
+            val historyCached = cached.filter {
+                it.status == "COMPLETED" || it.status == "RESOLVED" || it.status == "VERIFICATION_REQUIRED"
+            }
+            if (historyCached.isNotEmpty()) {
+                Result.success(historyCached.map { it.toDomain(gson) })
+            } else {
+                Result.failure(e)
+            }
         }
     }
 

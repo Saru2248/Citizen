@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.citizenai.worker.data.remote.SocketStatus
+import com.citizenai.worker.domain.model.TaskStatus
 import com.citizenai.worker.domain.model.WorkerTask
 import com.citizenai.worker.presentation.components.PriorityBadge
 import com.citizenai.worker.presentation.components.StatusBadge
@@ -250,6 +251,14 @@ fun WorkerDashboardScreen(
         }
 
         // ─── Active Tasks Header ──────────────────────────────────────────────
+        val activeTasks = uiState.tasks.filter {
+            it.status != TaskStatus.COMPLETED &&
+            it.status != TaskStatus.VERIFICATION_REQUIRED &&
+            it.status != TaskStatus.RESOLVED &&
+            it.status != TaskStatus.CANCELLED &&
+            it.status != TaskStatus.REJECTED
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -268,7 +277,7 @@ fun WorkerDashboardScreen(
                 shape = RoundedCornerShape(100.dp)
             ) {
                 Text(
-                    text = "${uiState.tasks.size} Active",
+                    text = "${activeTasks.size} Active",
                     color = OnCivicGreenContainer,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -287,7 +296,7 @@ fun WorkerDashboardScreen(
             ) {
                 CircularProgressIndicator(color = CivicGreen)
             }
-        } else if (uiState.tasks.isEmpty()) {
+        } else if (activeTasks.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -318,7 +327,7 @@ fun WorkerDashboardScreen(
                 }
             }
         } else {
-            uiState.tasks.forEach { task ->
+            activeTasks.forEach { task ->
                 TaskCard(task = task, onClick = { onTaskClick(task.id) })
             }
         }
