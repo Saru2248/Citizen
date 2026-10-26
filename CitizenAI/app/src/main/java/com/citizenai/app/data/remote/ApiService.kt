@@ -60,7 +60,9 @@ interface ApiService {
         @Part("address") address: RequestBody,
         @Part("issueType") issueType: RequestBody,
         @Part("priority") priority: RequestBody,
-        @Part("department") department: RequestBody
+        @Part("department") department: RequestBody,
+        @Part("aiConfidence") aiConfidence: RequestBody? = null,
+        @Part("aiAnalysis") aiAnalysis: RequestBody? = null
     ): Response<ComplaintDto>
 
     @GET("complaints/my")

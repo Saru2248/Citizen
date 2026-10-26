@@ -65,6 +65,40 @@ const submitComplaint = async (req, res, next) => {
 
     stage = 'MONGODB_INSERT';
     console.log('[COMPLAINT API] MongoDB insert started');
+
+    let parsedAiAnalysis = null;
+    let finalAiConfidence = null;
+
+    if (req.body.aiAnalysis) {
+      try {
+        parsedAiAnalysis = typeof req.body.aiAnalysis === 'string'
+          ? JSON.parse(req.body.aiAnalysis)
+          : req.body.aiAnalysis;
+        if (parsedAiAnalysis && parsedAiAnalysis.confidence !== undefined) {
+          finalAiConfidence = parseFloat(parsedAiAnalysis.confidence);
+        }
+      } catch (e) {
+        console.warn('[COMPLAINT API] Could not parse req.body.aiAnalysis:', e.message);
+      }
+    }
+
+    if (req.body.aiConfidence !== undefined && finalAiConfidence === null) {
+      finalAiConfidence = parseFloat(req.body.aiConfidence);
+    }
+
+    // If no aiAnalysis was passed in body, but an image file was uploaded, run Gemini analysis on the image
+    if (!parsedAiAnalysis && req.file && process.env.GEMINI_API_KEY) {
+      try {
+        const { analyzeCivicImage } = require('../services/geminiService');
+        parsedAiAnalysis = await analyzeCivicImage(req.file.path, req.file.mimetype);
+        if (parsedAiAnalysis && parsedAiAnalysis.confidence !== undefined) {
+          finalAiConfidence = parsedAiAnalysis.confidence;
+        }
+      } catch (geminiErr) {
+        console.warn('[COMPLAINT API] Automatic Gemini analysis during submission failed:', geminiErr.message);
+      }
+    }
+
     const complaint = new Complaint({
       citizenId: req.user._id,
       citizenName: req.user.name || 'Citizen User',
@@ -82,6 +116,8 @@ const submitComplaint = async (req, res, next) => {
       priority: (priority || 'NORMAL').toUpperCase(),
       department: department || 'Public Works',
       status: 'SUBMITTED',
+      aiConfidence: finalAiConfidence,
+      aiAnalysis: parsedAiAnalysis,
       statusHistory: [{
         status: 'SUBMITTED',
         message: 'Complaint submitted successfully',

@@ -201,14 +201,30 @@ fun CommentDto.toDomain(): Comment = Comment(
     postedAt   = postedAt.parseInstant()
 )
 
-fun AIAnalysisResponse.toDomain(): AIAnalysisResult = AIAnalysisResult(
-    issueType           = issueType,
-    severity            = severity,
-    department          = department,
-    confidence          = confidence,
-    suggestedCategory   = IssueCategory.fromString(issueType),
-    suggestedDescription = suggestedDescription ?: ""
-)
+fun AIAnalysisResponse.toDomain(): AIAnalysisResult {
+    val resolvedIssue = issue?.takeIf { it.isNotBlank() }
+        ?: issueType?.takeIf { it.isNotBlank() }
+        ?: "Civic Issue"
+    val resolvedDept = responsibleDepartment?.takeIf { it.isNotBlank() }
+        ?: department?.takeIf { it.isNotBlank() }
+        ?: "Public Works"
+    val resolvedSeverity = severity?.takeIf { it.isNotBlank() }?.uppercase() ?: "NORMAL"
+    val resolvedConfidence = confidence ?: (if (detected == false) 0.0f else 0.85f)
+    val resolvedDesc = description?.takeIf { it.isNotBlank() }
+        ?: suggestedDescription
+        ?: ""
+
+    return AIAnalysisResult(
+        issueType = resolvedIssue,
+        severity = resolvedSeverity,
+        department = resolvedDept,
+        confidence = resolvedConfidence,
+        suggestedCategory = IssueCategory.fromString(resolvedIssue),
+        suggestedDescription = resolvedDesc,
+        detected = detected ?: true,
+        imageHash = imageHash
+    )
+}
 
 fun WorkerTaskDto.toDomain(): WorkerTask = WorkerTask(
     id                  = id,

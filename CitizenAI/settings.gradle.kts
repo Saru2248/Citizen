@@ -16,6 +16,7 @@ pluginManagement {
             }
         }
     }
+    
 }
 
 dependencyResolutionManagement {

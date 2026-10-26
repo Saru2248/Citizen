@@ -186,6 +186,23 @@ class ComplaintRepositoryImpl @Inject constructor(
             val priorityPart = priority.toRequestBody("text/plain".toMediaTypeOrNull())
             val deptPart = department.toRequestBody("text/plain".toMediaTypeOrNull())
 
+            val aiConfidenceVal = com.citizenai.app.presentation.report.capture.ReportFlowState.confidence
+            val aiConfidencePart = if (aiConfidenceVal > 0f) {
+                aiConfidenceVal.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            } else null
+
+            val aiAnalysisPart = if (aiConfidenceVal > 0f) {
+                val jsonStr = org.json.JSONObject().apply {
+                    put("detected", true)
+                    put("issue", com.citizenai.app.presentation.report.capture.ReportFlowState.issueType)
+                    put("severity", com.citizenai.app.presentation.report.capture.ReportFlowState.severity)
+                    put("responsibleDepartment", com.citizenai.app.presentation.report.capture.ReportFlowState.department)
+                    put("confidence", aiConfidenceVal.toDouble())
+                    put("description", com.citizenai.app.presentation.report.capture.ReportFlowState.suggestedDescription)
+                }.toString()
+                jsonStr.toRequestBody("text/plain".toMediaTypeOrNull())
+            } else null
+
             val apiRes = apiService.submitComplaint(
                 image = imagePart,
                 category = categoryPart,
@@ -195,7 +212,9 @@ class ComplaintRepositoryImpl @Inject constructor(
                 address = addrPart,
                 issueType = issuePart,
                 priority = priorityPart,
-                department = deptPart
+                department = deptPart,
+                aiConfidence = aiConfidencePart,
+                aiAnalysis = aiAnalysisPart
             )
 
             val code = apiRes.code()

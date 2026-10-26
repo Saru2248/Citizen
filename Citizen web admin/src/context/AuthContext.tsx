@@ -94,7 +94,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (status === 401) errorMsg = 'Invalid email or password.';
       if (status === 403) errorMsg = 'Account is suspended or inactive.';
       if (status === 429) errorMsg = 'Too many login attempts. Please wait 15 minutes.';
-      if (err?.data?.message) errorMsg = err.data.message;
+      if (status >= 500) errorMsg = 'Backend server is offline or unreachable. Please ensure the backend is running on port 8000.';
+      if (err?.data?.message && err.data.message !== `HTTP ${status}` && !err.data.message.startsWith('HTTP ')) {
+        errorMsg = err.data.message;
+      }
       return { success: false, error: errorMsg };
     }
   }, []);

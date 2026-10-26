@@ -39,6 +39,19 @@ class AIAnalysisViewModel @Inject constructor(
         startAnalysis()
     }
 
+    fun retryAnalysis() {
+        _uiState.value = AIAnalysisUiState(
+            stages = listOf(
+                AnalysisStage("Detecting issue type", false),
+                AnalysisStage("Checking severity", false),
+                AnalysisStage("Finding responsible department", false)
+            ),
+            isAnalyzing = true,
+            error = null
+        )
+        startAnalysis()
+    }
+
     private fun startAnalysis() {
         viewModelScope.launch {
             val imagePath = ReportFlowState.imagePath
@@ -56,28 +69,34 @@ class AIAnalysisViewModel @Inject constructor(
             val result = if (imageFile != null && imageFile.exists()) {
                 analyzeImageUseCase(imageFile)
             } else {
-                // No real file in demo → use mock directly
-                analyzeImageUseCase(File("/dev/null"))
+                Result.failure(IllegalArgumentException("No image captured. Please go back and capture an image."))
             }
 
             result.fold(
                 onSuccess = { aiResult ->
-                    // Persist result for the details step
-                    ReportFlowState.issueType = aiResult.issueType
-                    ReportFlowState.severity = aiResult.severity
-                    ReportFlowState.department = aiResult.department
-                    ReportFlowState.confidence = aiResult.confidence
-                    ReportFlowState.suggestedDescription = aiResult.suggestedDescription
+                    if (!aiResult.detected) {
+                        _uiState.value = _uiState.value.copy(
+                            isAnalyzing = false,
+                            error = "The uploaded photo is unclear or does not clearly depict a civic infrastructure issue. Please retake or select a clearer photo."
+                        )
+                    } else {
+                        // Persist result for the details step
+                        ReportFlowState.issueType = aiResult.issueType
+                        ReportFlowState.severity = aiResult.severity
+                        ReportFlowState.department = aiResult.department
+                        ReportFlowState.confidence = aiResult.confidence
+                        ReportFlowState.suggestedDescription = aiResult.suggestedDescription
 
-                    _uiState.value = _uiState.value.copy(
-                        result = aiResult,
-                        isAnalyzing = false
-                    )
+                        _uiState.value = _uiState.value.copy(
+                            result = aiResult,
+                            isAnalyzing = false
+                        )
+                    }
                 },
                 onFailure = { err ->
                     _uiState.value = _uiState.value.copy(
                         isAnalyzing = false,
-                        error = err.message
+                        error = err.message ?: "Failed to analyze image."
                     )
                 }
             )

@@ -162,10 +162,33 @@ fun AIAnalysisScreen(
                 Icon(Icons.Default.Error, null, tint = PriorityCritical, modifier = Modifier.size(64.dp))
                 Spacer(Modifier.height(16.dp))
                 Text("Analysis Failed", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary)
-                Text(uiState.error!!, color = TextSecondary, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    uiState.error!!,
+                    color = TextSecondary,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 Spacer(Modifier.height(24.dp))
-                Button(onClick = onNavigateBack, colors = ButtonDefaults.buttonColors(containerColor = CivicGreen)) {
-                    Text("Try Again", color = Color.White)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Retake Photo")
+                    }
+                    Button(
+                        onClick = { viewModel.retryAnalysis() },
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = CivicGreen)
+                    ) {
+                        Text("Retry", color = Color.White)
+                    }
                 }
             }
         }
