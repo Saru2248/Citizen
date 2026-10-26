@@ -12,11 +12,17 @@ const statusHistorySchema = new mongoose.Schema({
 }, { _id: false });
 
 const aiAnalysisSchema = new mongoose.Schema({
-  suggestedCategory: String,
-  severityRating:    String,
-  detectedObjects:   [String],
-  summary:           String,
-  confidence:        Number,
+  detected:              { type: Boolean, default: true },
+  issue:                 { type: String, default: null },
+  severity:              { type: String, default: null },
+  responsibleDepartment: { type: String, default: null },
+  confidence:            { type: Number, default: null },
+  description:           { type: String, default: null },
+  imageHash:             { type: String, default: null },
+  suggestedCategory:     { type: String, default: null },
+  severityRating:        { type: String, default: null },
+  detectedObjects:       [String],
+  summary:               { type: String, default: null },
 }, { _id: false });
 
 const evidenceItemSchema = new mongoose.Schema({
