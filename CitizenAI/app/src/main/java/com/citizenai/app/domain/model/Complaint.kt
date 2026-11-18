@@ -22,9 +22,10 @@ data class Complaint(
     val description: String,
     val imageUrl: String?,          // Before photo (citizen uploaded)
     val afterImageUrl: String?,     // After photo (worker uploaded)
-    val latitude: Double,
-    val longitude: Double,
-    val address: String,            // Reverse geocoded address
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val locationSource: String = "GPS",
+    val address: String,            // Reverse geocoded address or manual address
     val status: ComplaintStatus,
     val priority: Priority,
     val department: String,

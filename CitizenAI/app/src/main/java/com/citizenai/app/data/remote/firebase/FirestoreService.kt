@@ -117,6 +117,7 @@ class FirestoreService @Inject constructor(
                 "completionPhotoUrl" to complaint.completionPhotoUrl,
                 "latitude" to complaint.latitude,
                 "longitude" to complaint.longitude,
+                "locationSource" to complaint.locationSource,
                 "address" to complaint.address,
                 "status" to complaint.status.name,
                 "priority" to complaint.priority.name,
@@ -280,8 +281,9 @@ class FirestoreService @Inject constructor(
             val description = data["description"] as? String ?: ""
             val imageUrl = data["imageUrl"] as? String ?: ""
             val afterImageUrl = data["afterImageUrl"] as? String
-            val latitude = (data["latitude"] as? Number)?.toDouble() ?: 0.0
-            val longitude = (data["longitude"] as? Number)?.toDouble() ?: 0.0
+            val latitude = (data["latitude"] as? Number)?.toDouble()
+            val longitude = (data["longitude"] as? Number)?.toDouble()
+            val locationSource = data["locationSource"] as? String ?: (if (latitude != null && longitude != null && (latitude != 0.0 || longitude != 0.0)) "GPS" else "MANUAL")
             val address = data["address"] as? String ?: ""
             val statusStr = data["status"] as? String ?: ComplaintStatus.REPORTED.name
             val priorityStr = data["priority"] as? String ?: Priority.NORMAL.name
@@ -313,6 +315,7 @@ class FirestoreService @Inject constructor(
                 afterImageUrl = afterImageUrl ?: (data["completionPhotoUrl"] as? String),
                 latitude = latitude,
                 longitude = longitude,
+                locationSource = locationSource,
                 address = address,
                 status = runCatching { ComplaintStatus.valueOf(statusStr) }.getOrDefault(ComplaintStatus.REPORTED),
                 priority = runCatching { Priority.valueOf(priorityStr) }.getOrDefault(Priority.NORMAL),

@@ -148,9 +148,11 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
 
     // Auto-fit bounds if we have valid coordinates
     if (filteredComplaints.length > 0) {
-      const validPoints = filteredComplaints.filter(c => c.latitude && c.longitude);
+      const validPoints = filteredComplaints.filter((c): c is typeof c & { latitude: number; longitude: number } => 
+        typeof c.latitude === 'number' && typeof c.longitude === 'number'
+      );
       if (validPoints.length > 0) {
-        const bounds = L.latLngBounds(validPoints.map(c => [c.latitude, c.longitude]));
+        const bounds = L.latLngBounds(validPoints.map(c => [c.latitude, c.longitude] as [number, number]));
         mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
       }
     }

@@ -96,9 +96,16 @@ export interface Complaint {
   afterImageUrl?: string; // After photo
   completionPhotoUrl?: string;
   evidence?: ComplaintEvidence;
-  latitude: number;
-  longitude: number;
+  latitude?: number | null;
+  longitude?: number | null;
   address: string;
+  locationSource?: 'GPS' | 'MANUAL';
+  location?: {
+    source?: 'GPS' | 'MANUAL';
+    address?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+  };
   status: ComplaintStatus;
   priority: Priority;
   department: string;

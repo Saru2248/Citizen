@@ -221,6 +221,32 @@ fun TaskDetailScreen(
                     // ─── Location & Map Direction Button ─────────────────────────────
                     if (!task.address.isNullOrEmpty()) {
                         SectionCard(title = "Location & Map", icon = Icons.Default.Map) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (task.locationSource.equals("MANUAL", ignoreCase = true)) "📍 Manual Address" else "🛰️ GPS Location",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (task.locationSource.equals("MANUAL", ignoreCase = true)) PriorityHigh else CivicGreenLight
+                                )
+                                if (task.latitude != null && task.longitude != null) {
+                                    Text(
+                                        text = "${String.format("%.4f", task.latitude)}, ${String.format("%.4f", task.longitude)}",
+                                        fontSize = 11.sp,
+                                        color = TextTertiary
+                                    )
+                                } else {
+                                    Text(
+                                        text = "No GPS Coordinates",
+                                        fontSize = 11.sp,
+                                        color = TextTertiary
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(6.dp))
                             Text(task.address, fontSize = 13.sp, color = TextSecondary)
                             Spacer(Modifier.height(12.dp))
                             OutlinedButton(

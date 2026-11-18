@@ -28,12 +28,13 @@ interface ComplaintRepository {
         imagePath: String,
         category: IssueCategory,
         description: String,
-        latitude: Double,
-        longitude: Double,
+        latitude: Double?,
+        longitude: Double?,
         address: String,
         issueType: String,
         priority: String,
-        department: String
+        department: String,
+        locationSource: String = "GPS"
     ): Result<Complaint>
 
     /** Citizen verifies resolution */

@@ -17,6 +17,8 @@ data class ComplaintDto(
     @SerializedName("latitude") val latitude: Double? = null,
     @SerializedName("longitude") val longitude: Double? = null,
     @SerializedName("address") val address: String? = null,
+    @SerializedName("locationSource") val locationSource: String? = null,
+    @SerializedName("location") val location: LocationDto? = null,
     @SerializedName("status") val status: String? = null,
     @SerializedName("priority") val priority: String? = null,
     @SerializedName("department") val department: String? = null,
@@ -59,4 +61,11 @@ data class CommentDto(
 data class VerifyResolutionRequest(
     @SerializedName("resolved") val resolved: Boolean,
     @SerializedName("reason") val reason: String?
+)
+
+data class LocationDto(
+    @SerializedName("source") val source: String? = "GPS",
+    @SerializedName("address") val address: String? = null,
+    @SerializedName("latitude") val latitude: Double? = null,
+    @SerializedName("longitude") val longitude: Double? = null
 )

@@ -90,7 +90,7 @@ class AIRepositoryImpl @Inject constructor(
                 val (categoryTag, userMessage) = when (code) {
                     404 -> "[B: ENDPOINT_NOT_FOUND]" to "AI analysis endpoint not found on server ($targetUrl). Please verify backend routes."
                     400 -> "[D: INVALID_IMAGE]" to "Server rejected image: ${serverMsg.ifBlank { "Invalid image format" }}"
-                    500, 502, 503 -> "[C: GEMINI_PROVIDER_ERROR]" to "AI Service Error: ${serverMsg.ifBlank { "Backend Gemini processing failed." }}"
+                    500, 502, 503 -> "[C: AI_PROVIDER_ERROR]" to "AI Service Error: ${serverMsg.ifBlank { "Backend AI processing failed." }}"
                     401, 403 -> "[AUTH_ERROR]" to "Authentication error: ${serverMsg.ifBlank { "Session invalid." }}"
                     else -> "[HTTP_ERROR_$code]" to "Server error (HTTP $code): ${serverMsg.ifBlank { "Unknown failure" }}"
                 }
@@ -102,11 +102,11 @@ class AIRepositoryImpl @Inject constructor(
             // Category A: Backend unreachable (connection refused, timeout, host lookup)
             val userFriendlyMsg = when {
                 e is ConnectException || e.message?.contains("Failed to connect", ignoreCase = true) == true ->
-                    "[A: BACKEND_UNREACHABLE] Cannot connect to server at $targetUrl. If using USB, run 'adb reverse tcp:8000 tcp:8000'. If using LAN, ensure phone and PC are on the same Wi-Fi."
+                    "[A: BACKEND_UNREACHABLE] Cannot connect to server at $targetUrl [Mode: ${BuildConfig.API_ENVIRONMENT}]. If using USB, run 'adb reverse tcp:8000 tcp:8000'. If using LAN, ensure phone and PC are on the same Wi-Fi and CITIZEN_AI_DEV_LAN_HOST in local.properties matches your PC."
                 e is SocketTimeoutException ->
                     "[A: BACKEND_TIMEOUT] Connection timed out waiting for server ($targetUrl). Please check backend status."
                 e is IOException ->
-                    "[A: NETWORK_IO_ERROR] Network transmission failed: ${e.message ?: "Connection error"}"
+                    "[A: NETWORK_IO_ERROR] Network transmission failed ($targetUrl): ${e.message ?: "Connection error"}"
                 else ->
                     "AI Analysis error: ${e.message ?: e.javaClass.simpleName}"
             }

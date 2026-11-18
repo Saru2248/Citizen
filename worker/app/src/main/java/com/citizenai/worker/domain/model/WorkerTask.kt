@@ -13,6 +13,7 @@ data class WorkerTask(
     val address: String? = null,
     val latitude: Double? = null,
     val longitude: Double? = null,
+    val locationSource: String? = "GPS",
     val beforePhotoUrl: String? = null,
     val afterPhotoUrl: String? = null,
     val workerNotes: String? = null,

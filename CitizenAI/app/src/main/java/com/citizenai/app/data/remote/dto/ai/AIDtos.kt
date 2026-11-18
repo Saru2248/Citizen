@@ -13,6 +13,7 @@ data class AIAnalysisResponse(
     @SerializedName("confidence") val confidence: Float? = null,
     @SerializedName("description") val description: String? = null,
     @SerializedName("suggestedDescription") val suggestedDescription: String? = null,
+    @SerializedName("needsHumanReview") val needsHumanReview: Boolean? = false,
     @SerializedName("imageUrl") val imageUrl: String? = null,
     @SerializedName("imageHash") val imageHash: String? = null
 )

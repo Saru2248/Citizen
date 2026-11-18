@@ -139,10 +139,19 @@ fun AIAnalysisScreen(
                         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Divider)
                         AIResultRow(
                             "Confidence",
-                            "${(result.confidence * 100).toInt()}%",
+                            result.confidence?.let { "${(it * 100).toInt()}%" } ?: "Model Evaluation",
                             Icons.Default.Analytics,
                             valueColor = CivicGreen
                         )
+                        if (result.needsHumanReview) {
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Divider)
+                            AIResultRow(
+                                "Review",
+                                "Human Review Recommended",
+                                Icons.Default.Warning,
+                                valueColor = PriorityHigh
+                            )
+                        }
                     }
                 }
 

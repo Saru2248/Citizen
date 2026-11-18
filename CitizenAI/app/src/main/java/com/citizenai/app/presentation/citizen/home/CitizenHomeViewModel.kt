@@ -95,7 +95,10 @@ class CitizenHomeViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isFetchingLocation = true)
+            _uiState.value = _uiState.value.copy(
+                isFetchingLocation = true,
+                currentLocationAddress = "Detecting location..."
+            )
             when (val result = locationHelper.getCurrentLocation(context)) {
                 is LocationResult.Success -> {
                     _uiState.value = _uiState.value.copy(

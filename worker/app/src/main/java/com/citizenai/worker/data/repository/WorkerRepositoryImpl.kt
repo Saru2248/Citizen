@@ -100,6 +100,7 @@ class WorkerRepositoryImpl @Inject constructor(
             address = dto.address,
             latitude = dto.latitude,
             longitude = dto.longitude,
+            locationSource = dto.locationSource ?: dto.location?.source ?: if (dto.latitude != null && dto.longitude != null) "GPS" else "MANUAL",
             beforePhotoUrl = resolveImageUrl(dto.imageUrl),
             afterPhotoUrl = resolveImageUrl(dto.afterImageUrl ?: dto.completionPhotoUrl),
             workerNotes = dto.workerNotes,

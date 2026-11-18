@@ -49,11 +49,11 @@ export const ComplaintsView: React.FC<ComplaintsViewProps> = ({
 
     if (activeSearch.trim()) {
       const q = activeSearch.toLowerCase();
-      const matchId = c.complaintId.toLowerCase().includes(q);
-      const matchCit = c.citizenName.toLowerCase().includes(q);
-      const matchDesc = c.description.toLowerCase().includes(q);
-      const matchAddr = c.address.toLowerCase().includes(q);
-      const matchWorker = c.assignedWorkerName?.toLowerCase().includes(q);
+      const matchId = (c.complaintId || '').toLowerCase().includes(q);
+      const matchCit = (c.citizenName || '').toLowerCase().includes(q);
+      const matchDesc = (c.description || '').toLowerCase().includes(q);
+      const matchAddr = (c.address || '').toLowerCase().includes(q);
+      const matchWorker = (c.assignedWorkerName || '').toLowerCase().includes(q);
       if (!matchId && !matchCit && !matchDesc && !matchAddr && !matchWorker) return false;
     }
     return true;
@@ -209,8 +209,15 @@ export const ComplaintsView: React.FC<ComplaintsViewProps> = ({
                     </td>
                     <td className="py-3 px-4 text-slate-800 font-semibold">{c.citizenName}</td>
                     <td className="py-3 px-4 text-slate-800 font-semibold">{c.category}</td>
-                    <td className="py-3 px-4 max-w-xs truncate text-slate-600" title={c.address}>
-                      {c.address}
+                    <td className="py-3 px-4 max-w-xs text-slate-600">
+                      <div className="truncate font-medium text-xs text-slate-700" title={c.address}>{c.address || 'No address provided'}</div>
+                      <span className={`inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                        (c.location?.source || c.locationSource) === 'MANUAL'
+                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      }`}>
+                        {(c.location?.source || c.locationSource) === 'MANUAL' ? '📍 Manual' : '🛰️ GPS'}
+                      </span>
                     </td>
                     <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
                       {new Date(c.reportedAt).toLocaleDateString()}

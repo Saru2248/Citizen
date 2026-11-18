@@ -70,8 +70,9 @@ fun ComplaintDto.toDomain(): Complaint {
         description         = description ?: "",
         imageUrl            = resolveFullImageUrl(imageUrl ?: photoUrl),
         afterImageUrl       = resolveFullImageUrl(afterImageUrl),
-        latitude            = latitude ?: 0.0,
-        longitude           = longitude ?: 0.0,
+        latitude            = latitude,
+        longitude           = longitude,
+        locationSource      = locationSource ?: location?.source ?: if (latitude != null && longitude != null && (latitude != 0.0 || longitude != 0.0)) "GPS" else "MANUAL",
         address             = address ?: "",
         status              = runCatching { ComplaintStatus.valueOf((status ?: "REPORTED").uppercase()) }.getOrDefault(ComplaintStatus.REPORTED),
         priority            = runCatching { Priority.valueOf((priority ?: "NORMAL").uppercase()) }.getOrDefault(Priority.NORMAL),
@@ -106,8 +107,9 @@ fun ComplaintDto.toEntity(localOwnerId: String = ""): ComplaintEntity {
         description        = description ?: "",
         imageUrl           = imageUrl ?: photoUrl,
         afterImageUrl      = afterImageUrl,
-        latitude           = latitude ?: 0.0,
-        longitude          = longitude ?: 0.0,
+        latitude           = latitude,
+        longitude          = longitude,
+        locationSource     = locationSource ?: location?.source ?: if (latitude != null && longitude != null && (latitude != 0.0 || longitude != 0.0)) "GPS" else "MANUAL",
         address            = address ?: "",
         status             = status ?: "SUBMITTED",
         priority           = priority ?: "NORMAL",
@@ -135,6 +137,7 @@ fun ComplaintEntity.toDomain(): Complaint = Complaint(
     afterImageUrl      = afterImageUrl,
     latitude           = latitude,
     longitude          = longitude,
+    locationSource     = locationSource ?: if (latitude != null && longitude != null && (latitude != 0.0 || longitude != 0.0)) "GPS" else "MANUAL",
     address            = address,
     status             = runCatching { ComplaintStatus.valueOf(status.uppercase()) }.getOrDefault(ComplaintStatus.PENDING),
     priority           = runCatching { Priority.valueOf(priority.uppercase()) }.getOrDefault(Priority.NORMAL),
@@ -160,6 +163,7 @@ fun Complaint.toEntity(localOwnerId: String = ""): ComplaintEntity = ComplaintEn
     afterImageUrl      = afterImageUrl,
     latitude           = latitude,
     longitude          = longitude,
+    locationSource     = locationSource,
     address            = address,
     status             = status.name,
     priority           = priority.name,
@@ -209,7 +213,7 @@ fun AIAnalysisResponse.toDomain(): AIAnalysisResult {
         ?: department?.takeIf { it.isNotBlank() }
         ?: "Public Works"
     val resolvedSeverity = severity?.takeIf { it.isNotBlank() }?.uppercase() ?: "NORMAL"
-    val resolvedConfidence = confidence ?: (if (detected == false) 0.0f else 0.85f)
+    val resolvedConfidence = confidence
     val resolvedDesc = description?.takeIf { it.isNotBlank() }
         ?: suggestedDescription
         ?: ""
@@ -222,6 +226,7 @@ fun AIAnalysisResponse.toDomain(): AIAnalysisResult {
         suggestedCategory = IssueCategory.fromString(resolvedIssue),
         suggestedDescription = resolvedDesc,
         detected = detected ?: true,
+        needsHumanReview = needsHumanReview ?: false,
         imageHash = imageHash
     )
 }

@@ -48,7 +48,7 @@ class LocationHelper @Inject constructor(
         return withContext(Dispatchers.IO) {
             try {
                 var location: Location? = null
-                val highAccLoc = kotlinx.coroutines.withTimeoutOrNull(6000L) {
+                val highAccLoc = kotlinx.coroutines.withTimeoutOrNull(5000L) {
                     try {
                         val cancelToken = CancellationTokenSource()
                         fusedLocationClient.getCurrentLocation(
@@ -59,7 +59,17 @@ class LocationHelper @Inject constructor(
                         null
                     }
                 }
-                location = highAccLoc ?: runCatching { fusedLocationClient.lastLocation.await() }.getOrNull()
+                location = highAccLoc ?: kotlinx.coroutines.withTimeoutOrNull(3000L) {
+                    try {
+                        val balancedToken = CancellationTokenSource()
+                        fusedLocationClient.getCurrentLocation(
+                            Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                            balancedToken.token
+                        ).await()
+                    } catch (_: Exception) {
+                        null
+                    }
+                } ?: runCatching { fusedLocationClient.lastLocation.await() }.getOrNull()
 
                 if (location != null) {
                     val address = geocodeLocation(context, location.latitude, location.longitude)
@@ -74,6 +84,23 @@ class LocationHelper @Inject constructor(
             } catch (e: Exception) {
                 LocationResult.Error(e.localizedMessage ?: "Failed to get current location")
             }
+        }
+    }
+
+    fun geocodeAddress(context: Context, addressString: String): Pair<Double, Double>? {
+        if (addressString.isBlank()) return null
+        return try {
+            val geocoder = Geocoder(context, Locale.getDefault())
+            @Suppress("DEPRECATION")
+            val addresses = geocoder.getFromLocationName(addressString, 1)
+            if (!addresses.isNullOrEmpty()) {
+                val addr = addresses[0]
+                Pair(addr.latitude, addr.longitude)
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 

@@ -12,12 +12,13 @@ class SubmitComplaintUseCase @Inject constructor(
         imagePath: String,
         category: IssueCategory,
         description: String,
-        latitude: Double,
-        longitude: Double,
+        latitude: Double?,
+        longitude: Double?,
         address: String,
         issueType: String,
         priority: String,
-        department: String
+        department: String,
+        locationSource: String = if (latitude != null && latitude != 0.0 && longitude != null && longitude != 0.0) "GPS" else "MANUAL"
     ): Result<Complaint> {
         // Validation
         if (imagePath.isBlank()) {
@@ -26,12 +27,17 @@ class SubmitComplaintUseCase @Inject constructor(
         if (description.isBlank()) {
             return Result.failure(IllegalArgumentException("Please add a description"))
         }
-        if (latitude == 0.0 && longitude == 0.0) {
+        if (address.isBlank()) {
             return Result.failure(IllegalArgumentException("Location is required"))
+        }
+        if (locationSource.equals("GPS", ignoreCase = true)) {
+            if (latitude == null || longitude == null || (latitude == 0.0 && longitude == 0.0)) {
+                return Result.failure(IllegalArgumentException("Valid GPS coordinates are required for GPS location"))
+            }
         }
         return complaintRepository.submitComplaint(
             imagePath, category, description, latitude, longitude,
-            address, issueType, priority, department
+            address, issueType, priority, department, locationSource
         )
     }
 }

@@ -84,8 +84,9 @@ class AIAnalysisViewModel @Inject constructor(
                         ReportFlowState.issueType = aiResult.issueType
                         ReportFlowState.severity = aiResult.severity
                         ReportFlowState.department = aiResult.department
-                        ReportFlowState.confidence = aiResult.confidence
+                        ReportFlowState.confidence = aiResult.confidence ?: 0f
                         ReportFlowState.suggestedDescription = aiResult.suggestedDescription
+                        ReportFlowState.needsHumanReview = aiResult.needsHumanReview
 
                         _uiState.value = _uiState.value.copy(
                             result = aiResult,

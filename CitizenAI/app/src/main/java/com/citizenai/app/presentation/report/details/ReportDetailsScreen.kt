@@ -53,7 +53,7 @@ fun ReportDetailsScreen(
     }
 
     LaunchedEffect(locationPermission.allPermissionsGranted) {
-        if (locationPermission.allPermissionsGranted && uiState.latitude == 0.0) {
+        if (locationPermission.allPermissionsGranted && uiState.address.isBlank() && uiState.locationSource != "MANUAL") {
             viewModel.fetchCurrentLocation(context)
         }
     }
@@ -112,9 +112,9 @@ fun ReportDetailsScreen(
                 Spacer(Modifier.height(20.dp))
             }
 
-            // ─── Location Section ─────────────────────────────────────────────
+            // ─── Location Selection Section ─────────────────────────────────────
 
-            SectionHeader(icon = Icons.Default.LocationOn, title = "Location")
+            SectionHeader(icon = Icons.Default.LocationOn, title = "Location Selection")
             Spacer(Modifier.height(8.dp))
 
             Card(
@@ -124,66 +124,123 @@ fun ReportDetailsScreen(
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    // Map location picker card
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(160.dp)
-                            .background(SurfaceVariantLight, RoundedCornerShape(12.dp))
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable {
+                    // Selected Location Status Display
+                    if (uiState.address.isNotBlank()) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (uiState.locationSource == "MANUAL") Color(0xFFFFFBEB) else Color(0xFFF0FDF4)
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                if (uiState.locationSource == "MANUAL") Color(0xFFFDE68A) else Color(0xFFBBF7D0)
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = if (uiState.locationSource == "MANUAL") "📍 Manual Location" else "🛰️ Current GPS Location",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        color = if (uiState.locationSource == "MANUAL") Color(0xFFB45309) else Color(0xFF15803D)
+                                    )
+                                    if (uiState.latitude != null && uiState.longitude != null && uiState.latitude != 0.0 && uiState.longitude != 0.0) {
+                                        Text(
+                                            text = "${String.format("%.4f", uiState.latitude)}, ${String.format("%.4f", uiState.longitude)}",
+                                            fontSize = 11.sp,
+                                            color = TextSecondary
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "Address only",
+                                            fontSize = 11.sp,
+                                            color = TextSecondary
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    text = uiState.address,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = TextPrimary,
+                                    lineHeight = 18.sp
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(14.dp))
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(90.dp)
+                                .background(SurfaceVariantLight, RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.LocationOff, null, tint = TextSecondary, modifier = Modifier.size(28.dp))
+                                Spacer(Modifier.height(4.dp))
+                                Text("No location selected yet", color = TextSecondary, fontSize = 12.sp)
+                            }
+                        }
+                        Spacer(Modifier.height(14.dp))
+                    }
+
+                    // Dual Options: Option A (Current GPS Location) & Option B (Manual Location Entry)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Option A: Use Current Location
+                        Button(
+                            onClick = {
                                 if (locationPermission.allPermissionsGranted) {
                                     viewModel.fetchCurrentLocation(context)
                                 } else {
                                     locationPermission.launchMultiplePermissionRequest()
                                 }
                             },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (uiState.latitude != 0.0) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(12.dp)) {
-                                Icon(Icons.Default.LocationOn, null, tint = PriorityCritical, modifier = Modifier.size(40.dp))
-                                Spacer(Modifier.height(4.dp))
+                            enabled = !uiState.isLoadingLocation,
+                            modifier = Modifier.weight(1f).height(46.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (uiState.locationSource == "GPS" && uiState.address.isNotBlank()) CivicGreen else Color(0xFF0F766E)
+                            )
+                        ) {
+                            if (uiState.isLoadingLocation) {
+                                CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+                            } else {
+                                Icon(Icons.Default.MyLocation, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
                                 Text(
-                                    "📍 ${String.format("%.4f", uiState.latitude)}, ${String.format("%.4f", uiState.longitude)}",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = TextPrimary
+                                    text = if (uiState.locationSource == "GPS" && uiState.address.isNotBlank()) "Refresh GPS" else "Current GPS",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
                                 )
-                                Text(uiState.address, fontSize = 12.sp, color = TextSecondary, maxLines = 2)
-                            }
-                        } else {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Default.Map, null, tint = CivicGreen, modifier = Modifier.size(48.dp))
-                                Spacer(Modifier.height(4.dp))
-                                Text("Tap map to auto-detect your location", color = CivicGreen, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                             }
                         }
-                    }
 
-                    Spacer(Modifier.height(12.dp))
-
-                    Button(
-                        onClick = {
-                            if (locationPermission.allPermissionsGranted) {
-                                viewModel.fetchCurrentLocation(context)
-                            } else {
-                                locationPermission.launchMultiplePermissionRequest()
-                            }
-                        },
-                        enabled = !uiState.isLoadingLocation,
-                        modifier = Modifier.fillMaxWidth().height(44.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = CivicGreen)
-                    ) {
-                        if (uiState.isLoadingLocation) {
-                            CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Getting location…", color = Color.White, fontSize = 14.sp)
-                        } else {
-                            Icon(Icons.Default.MyLocation, null, tint = Color.White, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Use Current Location", color = Color.White, fontSize = 14.sp)
+                        // Option B: Enter Location Manually
+                        OutlinedButton(
+                            onClick = { viewModel.openManualLocationDialog() },
+                            modifier = Modifier.weight(1f).height(46.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.5.dp, CivicGreen)
+                        ) {
+                            Icon(Icons.Default.EditLocationAlt, null, tint = CivicGreen, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "Enter Manually",
+                                color = CivicGreen,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
 
@@ -192,6 +249,100 @@ fun ReportDetailsScreen(
                         Text(error, color = PriorityCritical, style = MaterialTheme.typography.bodySmall)
                     }
                 }
+            }
+
+            // ─── Manual Location Entry Dialog ─────────────────────────────────
+            if (uiState.showManualLocationDialog) {
+                AlertDialog(
+                    onDismissRequest = { viewModel.dismissManualLocationDialog() },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.EditLocationAlt, contentDescription = null, tint = CivicGreen)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Enter Complaint Location", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    text = {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                "Enter the actual complaint location if GPS is unavailable or inaccurate:",
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+
+                            OutlinedTextField(
+                                value = uiState.manualStreet,
+                                onValueChange = viewModel::updateManualStreet,
+                                label = { Text("Street / Road Name *") },
+                                placeholder = { Text("e.g. MG Road, Near Market") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+
+                            OutlinedTextField(
+                                value = uiState.manualArea,
+                                onValueChange = viewModel::updateManualArea,
+                                label = { Text("Area / Locality *") },
+                                placeholder = { Text("e.g. Shivaji Nagar, Ward 4") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+
+                            OutlinedTextField(
+                                value = uiState.manualLandmark,
+                                onValueChange = viewModel::updateManualLandmark,
+                                label = { Text("Landmark") },
+                                placeholder = { Text("e.g. Opposite City Hospital") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+
+                            OutlinedTextField(
+                                value = uiState.manualCity,
+                                onValueChange = viewModel::updateManualCity,
+                                label = { Text("City *") },
+                                placeholder = { Text("e.g. Pune / Mumbai") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+
+                            OutlinedTextField(
+                                value = uiState.manualPincode,
+                                onValueChange = viewModel::updateManualPincode,
+                                label = { Text("PIN Code (Optional)") },
+                                placeholder = { Text("e.g. 411005") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = { viewModel.saveManualLocation(context) },
+                            colors = ButtonDefaults.buttonColors(containerColor = CivicGreen),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Save Location", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { viewModel.dismissManualLocationDialog() }
+                        ) {
+                            Text("Cancel", color = TextSecondary)
+                        }
+                    }
+                )
             }
 
             Spacer(Modifier.height(20.dp))

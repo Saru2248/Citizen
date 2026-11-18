@@ -190,11 +190,34 @@ export const ComplaintDetailsModal: React.FC<ComplaintDetailsModalProps> = ({
               <div className="lg:col-span-2 space-y-6">
                 {/* Description Card */}
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                  <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Citizen Description</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Citizen Description</h3>
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                      (complaint.location?.source || complaint.locationSource) === 'MANUAL'
+                        ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                        : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                    }`}>
+                      {(complaint.location?.source || complaint.locationSource) === 'MANUAL' ? '📍 Manual Address' : '🛰️ GPS Location'}
+                    </span>
+                  </div>
                   <p className="text-sm text-slate-800 leading-relaxed font-normal">{complaint.description || 'No description provided.'}</p>
-                  <div className="flex items-center gap-2 pt-2 text-xs text-slate-500">
-                    <MapPin size={14} className="text-emerald-600 shrink-0" />
-                    <span className="font-medium text-slate-700">{complaint.address}</span>
+                  <div className="flex items-start gap-2 pt-2 text-xs text-slate-500">
+                    <MapPin size={14} className="text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-medium text-slate-700 block">{complaint.address}</span>
+                      <a
+                        href={
+                          complaint.latitude != null && complaint.longitude != null
+                            ? `https://maps.google.com/?q=${complaint.latitude},${complaint.longitude}`
+                            : `https://maps.google.com/?q=${encodeURIComponent(complaint.address || '')}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-emerald-600 hover:text-emerald-700 underline text-[11px] inline-block mt-0.5"
+                      >
+                        View in Google Maps ↗
+                      </a>
+                    </div>
                   </div>
                 </div>
 
@@ -368,8 +391,18 @@ export const ComplaintDetailsModal: React.FC<ComplaintDetailsModalProps> = ({
                     <span className="font-semibold text-slate-800">{complaint.citizenName}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-slate-200">
+                    <span className="text-slate-500">Location Source:</span>
+                    <span className="font-semibold text-slate-800">
+                      {(complaint.location?.source || complaint.locationSource) === 'MANUAL' ? 'Manual Entry' : 'GPS'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-200">
                     <span className="text-slate-500">Coordinates:</span>
-                    <span className="font-mono text-slate-700">{complaint.latitude.toFixed(4)}, {complaint.longitude.toFixed(4)}</span>
+                    <span className="font-mono text-slate-700">
+                      {complaint.latitude != null && complaint.longitude != null
+                        ? `${Number(complaint.latitude).toFixed(4)}, ${Number(complaint.longitude).toFixed(4)}`
+                        : 'None (Manual Address)'}
+                    </span>
                   </div>
                   <div className="flex justify-between py-1">
                     <span className="text-slate-500">Last Updated:</span>

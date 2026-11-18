@@ -22,13 +22,20 @@ import javax.inject.Inject
 data class ReportDetailsUiState(
     val description: String = "",
     val category: IssueCategory = IssueCategory.POTHOLE,
-    val latitude: Double = 0.0,
-    val longitude: Double = 0.0,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val address: String = "",
+    val locationSource: String = "GPS",
     val isLoadingLocation: Boolean = false,
     val isSubmitting: Boolean = false,
     val locationError: String? = null,
-    val submitError: String? = null
+    val submitError: String? = null,
+    val showManualLocationDialog: Boolean = false,
+    val manualArea: String = "",
+    val manualStreet: String = "",
+    val manualLandmark: String = "",
+    val manualCity: String = "",
+    val manualPincode: String = ""
 )
 
 @HiltViewModel
@@ -48,16 +55,100 @@ class ReportDetailsViewModel @Inject constructor(
     val submittedComplaintId: SharedFlow<String> = _submittedComplaintId.asSharedFlow()
 
     init {
-        // Pre-fill from AI result
+        // Pre-fill from AI result and FlowState
         val aiState = ReportFlowState
         _uiState.value = _uiState.value.copy(
             description = aiState.suggestedDescription,
-            category = IssueCategory.fromString(aiState.issueType)
+            category = IssueCategory.fromString(aiState.issueType),
+            latitude = if (aiState.latitude != 0.0) aiState.latitude else null,
+            longitude = if (aiState.longitude != 0.0) aiState.longitude else null,
+            address = aiState.address,
+            locationSource = aiState.locationSource.ifBlank { "GPS" },
+            manualArea = aiState.manualArea,
+            manualStreet = aiState.manualStreet,
+            manualLandmark = aiState.manualLandmark,
+            manualCity = aiState.manualCity,
+            manualPincode = aiState.manualPincode
         )
     }
 
     fun onDescriptionChange(v: String) = update { copy(description = v, submitError = null) }
     fun onCategoryChange(v: IssueCategory) = update { copy(category = v) }
+
+    fun openManualLocationDialog() {
+        val flow = ReportFlowState
+        update {
+            copy(
+                showManualLocationDialog = true,
+                manualArea = if (manualArea.isNotBlank()) manualArea else flow.manualArea,
+                manualStreet = if (manualStreet.isNotBlank()) manualStreet else flow.manualStreet,
+                manualLandmark = if (manualLandmark.isNotBlank()) manualLandmark else flow.manualLandmark,
+                manualCity = if (manualCity.isNotBlank()) manualCity else flow.manualCity,
+                manualPincode = if (manualPincode.isNotBlank()) manualPincode else flow.manualPincode,
+                locationError = null
+            )
+        }
+    }
+
+    fun dismissManualLocationDialog() {
+        update { copy(showManualLocationDialog = false) }
+    }
+
+    fun updateManualArea(v: String) = update { copy(manualArea = v) }
+    fun updateManualStreet(v: String) = update { copy(manualStreet = v) }
+    fun updateManualLandmark(v: String) = update { copy(manualLandmark = v) }
+    fun updateManualCity(v: String) = update { copy(manualCity = v) }
+    fun updateManualPincode(v: String) = update { copy(manualPincode = v) }
+
+    fun saveManualLocation(context: Context) {
+        val s = _uiState.value
+        val area = s.manualArea.trim()
+        val street = s.manualStreet.trim()
+        val landmark = s.manualLandmark.trim()
+        val city = s.manualCity.trim()
+        val pincode = s.manualPincode.trim()
+
+        val parts = mutableListOf<String>()
+        if (street.isNotBlank()) parts.add(street)
+        if (landmark.isNotBlank()) parts.add(landmark)
+        if (area.isNotBlank()) parts.add(area)
+        if (city.isNotBlank()) parts.add(city)
+        if (pincode.isNotBlank()) parts.add(pincode)
+
+        if (parts.isEmpty()) {
+            update { copy(locationError = "Please enter complaint location or address.") }
+            return
+        }
+
+        val fullAddress = parts.joinToString(", ")
+
+        ReportFlowState.locationSource = "MANUAL"
+        ReportFlowState.address = fullAddress
+        ReportFlowState.manualArea = area
+        ReportFlowState.manualStreet = street
+        ReportFlowState.manualLandmark = landmark
+        ReportFlowState.manualCity = city
+        ReportFlowState.manualPincode = pincode
+
+        // Attempt forward geocoding if available, without blocking or faking
+        val coords = locationHelper.geocodeAddress(context, fullAddress)
+        val lat = coords?.first
+        val lng = coords?.second
+
+        ReportFlowState.latitude = lat ?: 0.0
+        ReportFlowState.longitude = lng ?: 0.0
+
+        update {
+            copy(
+                address = fullAddress,
+                latitude = lat,
+                longitude = lng,
+                locationSource = "MANUAL",
+                showManualLocationDialog = false,
+                locationError = null
+            )
+        }
+    }
 
     fun fetchCurrentLocation(context: Context) {
         viewModelScope.launch {
@@ -65,6 +156,7 @@ class ReportDetailsViewModel @Inject constructor(
             try {
                 when (val result = locationHelper.getCurrentLocation(context)) {
                     is LocationResult.Success -> {
+                        ReportFlowState.locationSource = "GPS"
                         ReportFlowState.latitude = result.latitude
                         ReportFlowState.longitude = result.longitude
                         ReportFlowState.address = result.address
@@ -73,6 +165,7 @@ class ReportDetailsViewModel @Inject constructor(
                                 latitude = result.latitude,
                                 longitude = result.longitude,
                                 address = result.address,
+                                locationSource = "GPS",
                                 locationError = null
                             )
                         }
@@ -94,13 +187,28 @@ class ReportDetailsViewModel @Inject constructor(
         if (state.isSubmitting) return
 
         val flow = ReportFlowState
+        val locSource = state.locationSource.ifBlank { flow.locationSource.ifBlank { "GPS" } }
+        val addr = state.address.ifBlank { flow.address }
+
+        if (addr.isBlank()) {
+            update { copy(submitError = "Please provide or select a location for this complaint.") }
+            return
+        }
+
+        if (locSource.equals("GPS", ignoreCase = true)) {
+            val curLat = state.latitude ?: flow.latitude.takeIf { it != 0.0 }
+            val curLon = state.longitude ?: flow.longitude.takeIf { it != 0.0 }
+            if (curLat == null || curLon == null) {
+                update { copy(submitError = "Please wait for GPS location or enter the address manually.") }
+                return
+            }
+        }
+
         viewModelScope.launch {
             update { copy(isSubmitting = true, submitError = null) }
             try {
-                // Use stored location if available
-                val lat = if (state.latitude != 0.0) state.latitude else flow.latitude
-                val lon = if (state.longitude != 0.0) state.longitude else flow.longitude
-                val addr = state.address.ifBlank { flow.address }
+                val lat = state.latitude ?: if (flow.latitude != 0.0) flow.latitude else null
+                val lon = state.longitude ?: if (flow.longitude != 0.0) flow.longitude else null
 
                 val result = submitComplaintUseCase(
                     imagePath = flow.imagePath,
@@ -111,7 +219,8 @@ class ReportDetailsViewModel @Inject constructor(
                     address = addr,
                     issueType = flow.issueType.ifBlank { state.category.displayName },
                     priority = flow.severity.ifBlank { "NORMAL" },
-                    department = flow.department.ifBlank { "Public Works" }
+                    department = flow.department.ifBlank { "Public Works" },
+                    locationSource = locSource
                 )
 
                 result.fold(

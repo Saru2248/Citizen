@@ -53,6 +53,7 @@ if (process.env.NODE_ENV === 'development') {
 
 const os = require('os');
 
+
 // ─── Static Files (uploads) ───────────────────────────────────────────────────
 const uploadDir = process.env.UPLOAD_DIR || path.resolve(__dirname, '../uploads');
 if (!require('fs').existsSync(uploadDir)) {
@@ -116,6 +117,13 @@ const start = async () => {
     console.log(`║  Environment: ${env.padEnd(50)} ║`);
     console.log(`║  Local URL:   http://127.0.0.1:${PORT}/api                         ║`);
     console.log(`║  Health:      http://127.0.0.1:${PORT}/api/health                  ║`);
+    const geminiLoaded = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim() !== '');
+    if (geminiLoaded) {
+      const model = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+      console.log(`║  AI Provider: Google Gemini (${model}) [Ready]`.padEnd(67) + `║`);
+    } else {
+      console.log(`║  AI Provider: [WARNING] GEMINI_API_KEY not set in .env`.padEnd(67) + `║`);
+    }
     if (lanIps.length > 0) {
       console.log(`╠──────────────────────────────────────────────────────────────────╢`);
       console.log(`║  Detected LAN IP(s) for Android Devices:                         ║`);

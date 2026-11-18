@@ -71,6 +71,8 @@ data class ComplaintDto(
     @SerializedName("address") val address: String? = null,
     @SerializedName("latitude") val latitude: Double? = null,
     @SerializedName("longitude") val longitude: Double? = null,
+    @SerializedName("locationSource") val locationSource: String? = null,
+    @SerializedName("location") val location: LocationDto? = null,
     @SerializedName("imageUrl") val imageUrl: String? = null,
     @SerializedName("afterImageUrl") val afterImageUrl: String? = null,
     @SerializedName("completionPhotoUrl") val completionPhotoUrl: String? = null,
@@ -134,6 +136,7 @@ data class WorkReportDto(
 )
 
 data class LocationDto(
+    @SerializedName("source") val source: String? = "GPS",
     @SerializedName("address") val address: String? = null,
     @SerializedName("latitude") val latitude: Double? = null,
     @SerializedName("longitude") val longitude: Double? = null

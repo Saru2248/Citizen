@@ -22,13 +22,43 @@ const submitComplaint = async (req, res, next) => {
     stage = 'VALIDATION';
     console.log('[COMPLAINT API] Request validation started');
 
-    const { category, description, latitude, longitude, address, issueType, title, priority, department } = req.body;
-    if (!category || !description || latitude === undefined || longitude === undefined || !address) {
+    const { category, description, latitude, longitude, address, issueType, title, priority, department, locationSource, location } = req.body;
+    
+    let locSource = 'GPS';
+    if (locationSource) {
+      locSource = String(locationSource).toUpperCase() === 'MANUAL' ? 'MANUAL' : 'GPS';
+    } else if (location && typeof location === 'object' && location.source) {
+      locSource = String(location.source).toUpperCase() === 'MANUAL' ? 'MANUAL' : 'GPS';
+    } else if (location && typeof location === 'string') {
+      try {
+        const parsedLoc = JSON.parse(location);
+        if (parsedLoc?.source) {
+          locSource = String(parsedLoc.source).toUpperCase() === 'MANUAL' ? 'MANUAL' : 'GPS';
+        }
+      } catch (_) {}
+    } else if (latitude === undefined || latitude === null || latitude === '' || isNaN(parseFloat(latitude))) {
+      locSource = 'MANUAL';
+    }
+
+    const hasLat = latitude !== undefined && latitude !== null && latitude !== '' && !isNaN(parseFloat(latitude));
+    const hasLng = longitude !== undefined && longitude !== null && longitude !== '' && !isNaN(parseFloat(longitude));
+    const parsedLat = hasLat ? parseFloat(latitude) : null;
+    const parsedLng = hasLng ? parseFloat(longitude) : null;
+
+    if (!category || !description || !address || !String(address).trim()) {
       console.log('[COMPLAINT API] FAILED');
       console.log('Error type: ValidationError');
-      console.log('Error message: Missing required fields');
+      console.log('Error message: Missing required fields (category, description, address)');
       console.log('Failed stage: VALIDATION');
-      return res.status(400).json({ success: false, message: 'category, description, latitude, longitude, address are required.', errorCode: 'MISSING_FIELDS' });
+      return res.status(400).json({ success: false, message: 'category, description, and address are required.', errorCode: 'MISSING_FIELDS' });
+    }
+
+    if (locSource === 'GPS' && (parsedLat === null || parsedLng === null)) {
+      console.log('[COMPLAINT API] FAILED');
+      console.log('Error type: ValidationError');
+      console.log('Error message: Missing coordinates for GPS location');
+      console.log('Failed stage: VALIDATION');
+      return res.status(400).json({ success: false, message: 'latitude and longitude are required for GPS location.', errorCode: 'MISSING_COORDINATES' });
     }
 
     console.log('[COMPLAINT API] Request validation passed');
@@ -87,7 +117,7 @@ const submitComplaint = async (req, res, next) => {
     }
 
     // If no aiAnalysis was passed in body, but an image file was uploaded, run Gemini analysis on the image
-    if (!parsedAiAnalysis && req.file && process.env.GEMINI_API_KEY) {
+    if (!parsedAiAnalysis && req.file && process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('YOUR_NEW_GEMINI_API_KEY')) {
       try {
         const { analyzeCivicImage } = require('../services/geminiService');
         parsedAiAnalysis = await analyzeCivicImage(req.file.path, req.file.mimetype);
@@ -110,9 +140,15 @@ const submitComplaint = async (req, res, next) => {
         before: evidenceBefore,
         after: null,
       },
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
-      address,
+      location: {
+        source: locSource,
+        address: String(address).trim(),
+        latitude: parsedLat,
+        longitude: parsedLng,
+      },
+      latitude: parsedLat,
+      longitude: parsedLng,
+      address: String(address).trim(),
       priority: (priority || 'NORMAL').toUpperCase(),
       department: department || 'Public Works',
       status: 'SUBMITTED',

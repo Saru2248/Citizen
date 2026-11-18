@@ -79,13 +79,23 @@ object ReportFlowState {
     var department: String = ""
     var confidence: Float = 0f
     var suggestedDescription: String = ""
+    var needsHumanReview: Boolean = false
     var latitude: Double = 0.0
     var longitude: Double = 0.0
     var address: String = ""
+    var locationSource: String = "GPS"
+    var manualArea: String = ""
+    var manualStreet: String = ""
+    var manualLandmark: String = ""
+    var manualCity: String = ""
+    var manualPincode: String = ""
 
     fun clear() {
         imagePath = ""; imageUri = null; issueType = ""; severity = ""
         department = ""; confidence = 0f; suggestedDescription = ""
+        needsHumanReview = false
         latitude = 0.0; longitude = 0.0; address = ""
+        locationSource = "GPS"
+        manualArea = ""; manualStreet = ""; manualLandmark = ""; manualCity = ""; manualPincode = ""
     }
 }

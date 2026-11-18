@@ -149,9 +149,11 @@ fun MapScreen(
                         properties = MapProperties(isMyLocationEnabled = false),
                         uiSettings = MapUiSettings(zoomControlsEnabled = true, myLocationButtonEnabled = false)
                     ) {
-                        uiState.filteredComplaints.forEach { complaint ->
-                            Marker(
-                                state = MarkerState(position = LatLng(complaint.latitude, complaint.longitude)),
+                        uiState.filteredComplaints
+                            .filter { it.latitude != null && it.longitude != null && (it.latitude != 0.0 || it.longitude != 0.0) }
+                            .forEach { complaint ->
+                                Marker(
+                                    state = MarkerState(position = LatLng(complaint.latitude!!, complaint.longitude!!)),
                                 title = complaint.issueType,
                                 snippet = complaint.address,
                                 icon = BitmapDescriptorFactory.defaultMarker(

@@ -156,16 +156,17 @@ class ComplaintRepositoryImpl @Inject constructor(
         imagePath: String,
         category: IssueCategory,
         description: String,
-        latitude: Double,
-        longitude: Double,
+        latitude: Double?,
+        longitude: Double?,
         address: String,
         issueType: String,
         priority: String,
-        department: String
+        department: String,
+        locationSource: String
     ): Result<Complaint> = withContext(Dispatchers.IO) {
         val apiUrl = "${com.citizenai.app.BuildConfig.API_BASE_URL}complaints"
         Log.d("CitizenAI_Submit", "[COMPLAINT SUBMISSION] Request start -> POST $apiUrl")
-        Log.d("CitizenAI_Submit", "[COMPLAINT SUBMISSION] category=${category.name}, priority=$priority, dept=$department, coords=($latitude, $longitude), address=$address, imagePath=$imagePath")
+        Log.d("CitizenAI_Submit", "[COMPLAINT SUBMISSION] category=${category.name}, priority=$priority, dept=$department, coords=($latitude, $longitude), locationSource=$locationSource, address=$address, imagePath=$imagePath")
 
         try {
             val file = File(imagePath)
@@ -179,9 +180,10 @@ class ComplaintRepositoryImpl @Inject constructor(
 
             val categoryPart = category.name.toRequestBody("text/plain".toMediaTypeOrNull())
             val descPart = description.toRequestBody("text/plain".toMediaTypeOrNull())
-            val latPart = latitude.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-            val lngPart = longitude.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val latPart = latitude?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull())
+            val lngPart = longitude?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull())
             val addrPart = address.toRequestBody("text/plain".toMediaTypeOrNull())
+            val locSourcePart = locationSource.toRequestBody("text/plain".toMediaTypeOrNull())
             val issuePart = issueType.toRequestBody("text/plain".toMediaTypeOrNull())
             val priorityPart = priority.toRequestBody("text/plain".toMediaTypeOrNull())
             val deptPart = department.toRequestBody("text/plain".toMediaTypeOrNull())
@@ -191,14 +193,19 @@ class ComplaintRepositoryImpl @Inject constructor(
                 aiConfidenceVal.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             } else null
 
-            val aiAnalysisPart = if (aiConfidenceVal > 0f) {
+            val aiAnalysisPart = if (com.citizenai.app.presentation.report.capture.ReportFlowState.issueType.isNotBlank()) {
                 val jsonStr = org.json.JSONObject().apply {
                     put("detected", true)
                     put("issue", com.citizenai.app.presentation.report.capture.ReportFlowState.issueType)
                     put("severity", com.citizenai.app.presentation.report.capture.ReportFlowState.severity)
                     put("responsibleDepartment", com.citizenai.app.presentation.report.capture.ReportFlowState.department)
-                    put("confidence", aiConfidenceVal.toDouble())
+                    if (aiConfidenceVal > 0f) {
+                        put("confidence", aiConfidenceVal.toDouble())
+                    } else {
+                        put("confidence", org.json.JSONObject.NULL)
+                    }
                     put("description", com.citizenai.app.presentation.report.capture.ReportFlowState.suggestedDescription)
+                    put("needsHumanReview", com.citizenai.app.presentation.report.capture.ReportFlowState.needsHumanReview)
                 }.toString()
                 jsonStr.toRequestBody("text/plain".toMediaTypeOrNull())
             } else null
@@ -210,6 +217,7 @@ class ComplaintRepositoryImpl @Inject constructor(
                 latitude = latPart,
                 longitude = lngPart,
                 address = addrPart,
+                locationSource = locSourcePart,
                 issueType = issuePart,
                 priority = priorityPart,
                 department = deptPart,

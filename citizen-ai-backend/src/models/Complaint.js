@@ -1,3 +1,4 @@
+
 'use strict';
 const mongoose = require('mongoose');
 
@@ -18,7 +19,10 @@ const aiAnalysisSchema = new mongoose.Schema({
   responsibleDepartment: { type: String, default: null },
   confidence:            { type: Number, default: null },
   description:           { type: String, default: null },
+  needsHumanReview:      { type: Boolean, default: false },
   imageHash:             { type: String, default: null },
+  modelName:             { type: String, default: null },
+  analysisTimestamp:     { type: Date, default: Date.now },
   suggestedCategory:     { type: String, default: null },
   severityRating:        { type: String, default: null },
   detectedObjects:       [String],
@@ -121,8 +125,14 @@ const complaintSchema = new mongoose.Schema({
   afterImageUrl:      { type: String, default: null },
   completionPhotoUrl: { type: String, default: null },
   evidence:           { type: evidenceSchema, default: () => ({ before: null, after: null }) },
-  latitude:           { type: Number, required: true },
-  longitude:          { type: Number, required: true },
+  location: {
+    source:    { type: String, enum: ['GPS', 'MANUAL'], default: 'GPS' },
+    address:   { type: String, default: '' },
+    latitude:  { type: Number, default: null },
+    longitude: { type: Number, default: null },
+  },
+  latitude:           { type: Number, default: null },
+  longitude:          { type: Number, default: null },
   address:            { type: String, required: true },
   status:             { type: String, default: 'SUBMITTED', enum: ALLOWED_STATUSES },
   priority:           { type: String, default: 'NORMAL', enum: ['LOW','NORMAL','MEDIUM','HIGH','CRITICAL'] },
@@ -264,6 +274,13 @@ complaintSchema.methods.toDTO = function () {
         fileSize: null,
         originalFileName: null,
       } : null),
+    },
+    locationSource: this.location?.source || (this.latitude != null && this.longitude != null ? 'GPS' : 'MANUAL'),
+    location: {
+      source: this.location?.source || (this.latitude != null && this.longitude != null ? 'GPS' : 'MANUAL'),
+      address: this.location?.address || this.address || '',
+      latitude: this.location?.latitude !== undefined && this.location?.latitude !== null ? this.location.latitude : this.latitude,
+      longitude: this.location?.longitude !== undefined && this.location?.longitude !== null ? this.location.longitude : this.longitude,
     },
     latitude: this.latitude,
     longitude: this.longitude,
